@@ -47,10 +47,13 @@
   never ran `_mix()`, so the supplied assignment never reached it.
 
 - A `mixest` or `mixunif` column in `iCov` now splits a homogeneous event
-  group.  Subjects that share an event table are solved as one group, and
-  the group was only split on iCov columns that are model parameters;
-  `mixest` is a reserved variable, so the whole group took the first
-  subject's component.
+  group when the model is a mixture model.  Subjects that share an event
+  table are solved as one group, and the group was only split on iCov
+  columns that are model parameters; `mixest` is a reserved variable, so the
+  whole group took the first subject's component.
+
+- `rx_mixsel_<k>_<n>_` is now a reserved variable name, like `mixest`,
+  `mixnum` and `mixunif`.  A model cannot use it for anything else.
 
 ### Event translation
 

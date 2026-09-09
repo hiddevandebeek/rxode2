@@ -807,6 +807,18 @@
   do.call(interaction, c(unname(df), list(drop = TRUE, lex.order = TRUE)))
 }
 
+# The iCov columns a homogeneous solve group has to be split on: the model's
+# own parameters, plus -- for a mixture model only -- the reserved mixture
+# names, which are never model parameters but do make the subjects in a group
+# solve differently.
+.rxGroupSolveParams <- function(mv) {
+  .p <- mv$params
+  if (isTRUE(unname(mv$flags["mix"]) > 0L)) {
+    .p <- c(.p, "mixest", "mixunif")
+  }
+  .p
+}
+
 .etGroupedSolveDataFrameICov <- function(events, iCov, keep = NULL, modelParams = character(0)) {
   .groups <- attr(events, "rxHomGroups", exact = TRUE)
   if (!is.data.frame(events) || is.null(.groups) || !inherits(iCov, "data.frame")) {
@@ -843,11 +855,7 @@
     }
     .subIc <- iCov[.idx, , drop = FALSE]
     .splitCols <- setdiff(names(.subIc), .idName)
-    # mixest/mixunif are reserved variables, so they are never model params;
-    # they still make the subjects in a group solve differently, so they have
-    # to split the group like any other varying iCov column.
-    .splitNeeded <- unique(c(tolower(.modelParams), tolower(.keep),
-                             "mixest", "mixunif"))
+    .splitNeeded <- unique(c(tolower(.modelParams), tolower(.keep)))
     .splitCols <- .splitCols[tolower(.splitCols) %in% .splitNeeded]
     .splitKey <- if (length(.splitCols) == 0L) {
       factor(rep.int("1", nrow(.subIc)))
