@@ -325,8 +325,13 @@ rxTest({
     # component that folds away must not shrink the mixture
     .mv3 <- rxModelVars("a = b*rx_mixsel_1_3_\n")
     expect_equal(unname(.mv3$flags["mix"]), 3L)
-    # and selectors that disagree about the total are a syntax error
+    # and selectors that disagree about the total are a syntax error, whether
+    # they disagree with each other or with a literal mix() in the same model
     expect_error(rxModelVars("a = rx_mixsel_1_2_ + rx_mixsel_2_3_\n"))
+    expect_error(rxModelVars("a = rx_mixsel_1_3_\nb = mix(c, p1, d)\n"))
+    expect_error(rxModelVars("b = mix(c, p1, d)\na = rx_mixsel_1_3_\n"))
+    # agreeing is fine
+    expect_error(rxModelVars("b = mix(c, p1, d)\na = rx_mixsel_1_2_\n"), NA)
   })
 
   test_that("an expanded mix() takes mixest per individual", {

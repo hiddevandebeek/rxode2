@@ -53,7 +53,15 @@
   whole group took the first subject's component.
 
 - `rx_mixsel_<k>_<n>_` is now a reserved variable name, like `mixest`,
-  `mixnum` and `mixunif`.  A model cannot use it for anything else.
+  `mixnum` and `mixunif`.  A model cannot use it for anything else, and
+  selectors that disagree with each other, or with a literal `mix()` in the
+  same model, about the number of components are a syntax error.
+
+- Note that the expansion drops the mixture PROBABILITIES along with the
+  `mix()` call, so an expanded model can be told which component a subject
+  belongs to (`mixest`) but cannot sample one from a supplied `mixunif`.
+  Simulation from `mixunif` needs the `mix()` call itself, which every
+  hand-written model keeps.
 
 - An `iCov` column that a homogeneous solve group is split on no longer
   drops the subject when its value is `NA`.  The split key came from
