@@ -26,6 +26,29 @@
   the append-only convention the struct already documents, so the stride was
   the whole of the disagreement.
 
+### Mixture models
+
+- A `mix()` model whose call has been expanded by symengine -- the form
+  every estimation method's prediction model is built from -- is now still
+  recognized as a mixture model.  The expansion emits one reserved
+  `rx_mixsel_<k>_` selector per component, which keeps the component count
+  the dropped `mix()` call carried, so `mixnum` reports it and a
+  per-individual `mixest` supplied in the data or in `iCov` reaches the
+  solve.  Previously such a model parsed with no mixture at all: the
+  `mixest` column was discarded, `ind->mixest` stayed 0, and every
+  `mix()`-derived variable solved as 0 -- which silently corrupted the
+  predictions in the fit table (nlmixr2/nlmixr2est#1041).
+
+- `ind->mixest` is now set when the value is read from the data, not only
+  inside `_mix()`.  A model that reads `mixest` without calling `mix()`
+  never ran `_mix()`, so the supplied assignment never reached it.
+
+- A `mixest` or `mixunif` column in `iCov` now splits a homogeneous event
+  group.  Subjects that share an event table are solved as one group, and
+  the group was only split on iCov columns that are model parameters;
+  `mixest` is a reserved variable, so the whole group took the first
+  subject's component.
+
 ### Event translation
 
 - A steady-state dose into a compartment with a modeled `alag()` pushed

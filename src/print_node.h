@@ -39,6 +39,19 @@ static inline int nodeMixest(char *value) {
   return 0;
 }
 
+// rx_mixsel_<k>_ is the per-component selector an expanded mix() leaves
+// behind; it reads as (mixest == k) and, unlike a bare mixest == k, keeps the
+// component count visible to the parser (tb.mixSel).
+static inline int nodeMixSel(char *value) {
+  int k = mixSelNum(value);
+  if (k == 0) return 0;
+  if (k > tb.mixSel) tb.mixSel = k;
+  sAppend(&sb,   "(_solveData->subjects[_cSub].mixest == %d)", k);
+  sAppend(&sbDt, "(_solveData->subjects[_cSub].mixest == %d)", k);
+  sAppend(&sbt,  "rx_mixsel_%d_", k);
+  return 1;
+}
+
 static inline int nodeMixunif(char *value) {
   if (!rxstrcmpi("mixunif",value)){
     aAppendN("_solveData->subjects[_cSub].mixunif", 35);

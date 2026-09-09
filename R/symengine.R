@@ -1790,6 +1790,28 @@ rxToSE <- function(x, envir = NULL, progress = FALSE,
 }
 
 
+# The reserved name of the k-th component selector of an expanded mix().  A
+# bare `mixest == k` loses the component count once the mix() call is gone;
+# this name keeps it, so the parser still reports the model as a mixture and
+# rxode2 will take a per-individual mixest from the data or iCov.
+.rxMixSelName <- function(k) paste0("rx_mixsel_", as.integer(k), "_")
+
+# rxEq(mixest, k) -- what .rxToSEMix() feeds symengine for component k -- comes
+# back out as the selector name rather than as `(mixest == k)`
+.rxFromSEMixSel <- function(x) {
+  .a <- x[[2]]
+  .b <- x[[3]]
+  if (identical(.b, quote(mixest))) {
+    .tmp <- .a
+    .a <- .b
+    .b <- .tmp
+  }
+  if (!identical(.a, quote(mixest))) return(NULL)
+  if (!is.numeric(.b) || length(.b) != 1L) return(NULL)
+  if (is.na(.b) || .b < 1 || .b != round(.b)) return(NULL)
+  .rxMixSelName(.b)
+}
+
 # Convert the mix() expression to a if clause with mixest for symengine
 .rxToSEMix <- function(x, envir = NULL, progress = FALSE, isEnv=TRUE) {
   .expr <- vapply(seq_along(x), function(i) {
@@ -2954,6 +2976,10 @@ rxFromSE <- function(x, unknownDerivatives = c("forward", "central", "error"),
     } else {
       if (length(x[[1]]) == 1) {
         .x1 <- as.character(x[[1]])
+        if (.x1 == "rxEq" && length(x) == 3L) {
+          .ms <- .rxFromSEMixSel(x)
+          if (!is.null(.ms)) return(.ms)
+        }
         .xc <- .SEsingle[[.x1]]
         if (!is.null(.xc)) {
           if (length(x) == 2) {

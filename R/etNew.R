@@ -843,7 +843,11 @@
     }
     .subIc <- iCov[.idx, , drop = FALSE]
     .splitCols <- setdiff(names(.subIc), .idName)
-    .splitNeeded <- unique(c(tolower(.modelParams), tolower(.keep)))
+    # mixest/mixunif are reserved variables, so they are never model params;
+    # they still make the subjects in a group solve differently, so they have
+    # to split the group like any other varying iCov column.
+    .splitNeeded <- unique(c(tolower(.modelParams), tolower(.keep),
+                             "mixest", "mixunif"))
     .splitCols <- .splitCols[tolower(.splitCols) %in% .splitNeeded]
     .splitKey <- if (length(.splitCols) == 0L) {
       factor(rep.int("1", nrow(.subIc)))

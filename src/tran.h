@@ -122,6 +122,7 @@ lhs symbols?
   int lvlStr;
   int dummyLhs;
   int hasMix; // Has mixture function
+  int mixSel; // Largest rx_mixsel_<k>_ component seen (an expanded mix())
   int evid_; // pushing evid_() flag
   int *splitBolus; // source then target de indexes (+1)
   int splitBolusN;
@@ -482,6 +483,23 @@ extern sbuf sbt;
 #define aAppendN(str, len) sAppendN(&sb, str, len); sAppendN(&sbDt, str, len);
 #define aProp(prop) curLineProp(&sbPm, prop); curLineProp(&sbPmDt, prop); curLineProp(&sbNrmL, prop);
 #define aType(type) curLineType(&sbPm, type); curLineType(&sbPmDt, type); curLineType(&sbNrmL, type);
+
+// A mix() call that has been through symengine comes back with the call
+// expanded to one selector per component.  The selectors are named
+// rx_mixsel_<k>_ so the component count the expansion dropped survives to the
+// parser; returns k (>= 1), or 0 when the name is an ordinary variable.
+static inline int mixSelNum(const char *s) {
+  if (strncmp(s, "rx_mixsel_", 10)) return 0;
+  const char *p = s + 10;
+  int k = 0;
+  if (*p < '1' || *p > '9') return 0; // no leading zero, no empty index
+  for (; *p >= '0' && *p <= '9'; p++) {
+    k = k*10 + (*p - '0');
+    if (k > 100000) return 0;
+  }
+  if (strcmp(p, "_")) return 0; // must end with the trailing underscore
+  return k;
+}
 
 static inline int toInt(char *v2){
   errno = 0;
