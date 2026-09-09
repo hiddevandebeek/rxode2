@@ -1809,7 +1809,8 @@ rxToSE <- function(x, envir = NULL, progress = FALSE,
       .nm <- .rxMixSelName(i/2, length(x) %/% 2)
       # the selector is generated here rather than read out of the model text,
       # so it has to be introduced to the symengine environment by hand
-      if (isEnv && is.environment(envir) && !exists(.nm, envir = envir)) {
+      if (isEnv && is.environment(envir) &&
+            !exists(.nm, envir = envir, inherits = FALSE)) {
         assign(.nm, symengine::Symbol(.nm), envir = envir)
       }
       paste0(.nm, "*(", .rxToSE(x[[i]], envir = envir, progress = progress), ")")

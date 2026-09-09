@@ -4241,7 +4241,7 @@ static inline void rxSetIndMix(rx_solving_options_ind* ind, unsigned int nsub,
     ind->mixunif = rxunifmix(ind);
   } else {
     ind->mixunif = mixUnif[nsub];
-    if (ind->mixunif >= 1.0) ind->mixest = trunc(ind->mixunif);
+    if (ind->mixunif >= 1.0) ind->mixest = (int) trunc(ind->mixunif);
   }
 }
 
