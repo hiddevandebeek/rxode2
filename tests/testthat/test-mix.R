@@ -347,6 +347,18 @@ rxTest({
     expect_equal(.s$mn, rep(2.0, 6))
     expect_equal(.s$Kel, ifelse(.want == 1L, 0.5, 1.5))
 
+    # a missing component is rejected, not silently dropped from the solve
+    expect_error(rxSolve(.m, .ev, params = .p,
+                         iCov = data.frame(id = 1:6, mixest = c(NA_integer_, .want[-1]))),
+                 "mixest")
+    # as are values outside 1..nMix, and non-integers
+    expect_error(rxSolve(.m, .ev, params = .p,
+                         iCov = data.frame(id = 1:6, mixest = c(0L, .want[-1]))),
+                 "mixest")
+    expect_error(rxSolve(.m, .ev, params = .p,
+                         iCov = data.frame(id = 1:6, mixest = c(3L, .want[-1]))),
+                 "mixest")
+
     # and supplied as an ordinary data column
     .d <- as.data.frame(.ev)
     .d$mixest <- .want[.d$id]

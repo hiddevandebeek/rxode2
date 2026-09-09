@@ -55,6 +55,12 @@
 - `rx_mixsel_<k>_<n>_` is now a reserved variable name, like `mixest`,
   `mixnum` and `mixunif`.  A model cannot use it for anything else.
 
+- An `iCov` column that a homogeneous solve group is split on no longer
+  drops the subject when its value is `NA`.  The split key came from
+  `interaction()`, which is `NA` for a row with any `NA`, and the `split()`
+  it feeds discarded that row -- so the subject vanished from the solve
+  output instead of being rejected.
+
 ### Event translation
 
 - A steady-state dose into a compartment with a modeled `alag()` pushed

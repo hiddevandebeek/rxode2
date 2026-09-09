@@ -804,7 +804,18 @@
   if (!is.data.frame(df) || ncol(df) == 0L) {
     return(rep.int("1", if (is.data.frame(df)) nrow(df) else 0L))
   }
-  do.call(interaction, c(unname(df), list(drop = TRUE, lex.order = TRUE)))
+  # interaction() returns NA for a row with an NA in any column, and the
+  # split(drop = TRUE) it feeds then DISCARDS that row -- silently dropping the
+  # subject from the solve.  Give NA a level of its own instead, so the subject
+  # survives to the per-subject validation that should reject it.  The
+  # character conversion matches what interaction() does to build its levels,
+  # so grouping is otherwise unchanged.
+  .df <- lapply(unname(df), function(.col) {
+    .chr <- as.character(.col)
+    .chr[is.na(.col)] <- "\001NA\001"
+    .chr
+  })
+  do.call(interaction, c(.df, list(drop = TRUE, lex.order = TRUE)))
 }
 
 # The iCov columns a homogeneous solve group has to be split on: the model's
