@@ -61,7 +61,7 @@ static inline int isReservedVariable(const char *s) {
     !rxstrcmpi("mixnum", s) ||
     !rxstrcmpi("mixest", s) ||
     !rxstrcmpi("mixunif", s) ||
-    mixSelNum(s) != 0 ||
+    mixSelNum(s, NULL) != 0 ||
     !strcmp("rx__PTR__", s) ||
     !strcmp("tlast", s) ||
     // Ignore M_ constants

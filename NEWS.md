@@ -31,10 +31,13 @@
 - A `mix()` model whose call has been expanded by symengine -- the form
   every estimation method's prediction model is built from -- is now still
   recognized as a mixture model.  The expansion emits one reserved
-  `rx_mixsel_<k>_` selector per component, which keeps the component count
-  the dropped `mix()` call carried, so `mixnum` reports it and a
+  `rx_mixsel_<k>_<n>_` selector per component, spelling out the component
+  count the dropped `mix()` call carried, so `mixnum` reports it and a
   per-individual `mixest` supplied in the data or in `iCov` reaches the
-  solve.  Previously such a model parsed with no mixture at all: the
+  solve.  The total is spelled out rather than inferred from the largest
+  selector present, because a component whose expression folds to zero --
+  any sensitivity with respect to an eta only one component uses -- drops
+  its selector out of the expression entirely.  Previously such a model parsed with no mixture at all: the
   `mixest` column was discarded, `ind->mixest` stayed 0, and every
   `mix()`-derived variable solved as 0 -- which silently corrupted the
   predictions in the fit table (nlmixr2/nlmixr2est#1041).

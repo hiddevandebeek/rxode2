@@ -1790,26 +1790,14 @@ rxToSE <- function(x, envir = NULL, progress = FALSE,
 }
 
 
-# The reserved name of the k-th component selector of an expanded mix().  A
-# bare `mixest == k` loses the component count once the mix() call is gone;
+# The reserved name of the k-th of n component selectors of an expanded mix().
+# A bare `mixest == k` loses the component count once the mix() call is gone;
 # this name keeps it, so the parser still reports the model as a mixture and
-# rxode2 will take a per-individual mixest from the data or iCov.
-.rxMixSelName <- function(k) paste0("rx_mixsel_", as.integer(k), "_")
-
-# rxEq(mixest, k) -- what .rxToSEMix() feeds symengine for component k -- comes
-# back out as the selector name rather than as `(mixest == k)`
-.rxFromSEMixSel <- function(x) {
-  .a <- x[[2]]
-  .b <- x[[3]]
-  if (identical(.b, quote(mixest))) {
-    .tmp <- .a
-    .a <- .b
-    .b <- .tmp
-  }
-  if (!identical(.a, quote(mixest))) return(NULL)
-  if (!is.numeric(.b) || length(.b) != 1L) return(NULL)
-  if (is.na(.b) || .b < 1 || .b != round(.b)) return(NULL)
-  .rxMixSelName(.b)
+# rxode2 will take a per-individual mixest from the data or iCov.  It goes into
+# symengine as an ordinary symbol -- it is constant in every eta, so it rides
+# through differentiation and comes back out unchanged.
+.rxMixSelName <- function(k, n) {
+  paste0("rx_mixsel_", as.integer(k), "_", as.integer(n), "_")
 }
 
 # Convert the mix() expression to a if clause with mixest for symengine
@@ -1818,7 +1806,13 @@ rxToSE <- function(x, envir = NULL, progress = FALSE,
     if (i %% 2 == 0)  {
       # Noting that argument 1 is the function name,
       # The even arguments are the mixture values
-      paste0("rxEq(mixest, ", i/2, ")*(", .rxToSE(x[[i]], envir = envir, progress = progress), ")")
+      .nm <- .rxMixSelName(i/2, length(x) %/% 2)
+      # the selector is generated here rather than read out of the model text,
+      # so it has to be introduced to the symengine environment by hand
+      if (isEnv && is.environment(envir) && !exists(.nm, envir = envir)) {
+        assign(.nm, symengine::Symbol(.nm), envir = envir)
+      }
+      paste0(.nm, "*(", .rxToSE(x[[i]], envir = envir, progress = progress), ")")
     } else {
       ""
     }
@@ -2976,10 +2970,6 @@ rxFromSE <- function(x, unknownDerivatives = c("forward", "central", "error"),
     } else {
       if (length(x[[1]]) == 1) {
         .x1 <- as.character(x[[1]])
-        if (.x1 == "rxEq" && length(x) == 3L) {
-          .ms <- .rxFromSEMixSel(x)
-          if (!is.null(.ms)) return(.ms)
-        }
         .xc <- .SEsingle[[.x1]]
         if (!is.null(.xc)) {
           if (length(x) == 2) {

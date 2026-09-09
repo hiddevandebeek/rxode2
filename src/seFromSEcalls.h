@@ -298,14 +298,6 @@ static const char *seOps2Call(seCtx *ctx, const char *name,
     if (ctx->failed) return "";
     b = seEmit(ctx, args[1]);
     if (ctx->failed) return "";
-    /* rxEq(mixest, k) is a mixture component selector, which .rxFromSE()
-       renders as the reserved rx_mixsel_<k>_ name so the component count
-       survives to the parser.  Hand it to R rather than keeping a second copy
-       of that rule here. */
-    if (strcmp(name, "rxEq") == 0 &&
-        (strcmp(a, "mixest") == 0 || strcmp(b, "mixest") == 0)) {
-      return seFail(ctx);
-    }
     return seNamedConstant(seCat(ctx, seOps2[i].open, a, seOps2[i].mid, b,
                                  seOps2[i].close, NULL));
   }
