@@ -30,10 +30,10 @@
   } else {
     .var.name2 <- as.character(line[[3]])
   }
-  # A reserved name -- the parser's (`t`, `time`, `M_PI`, ...) or one of
-  # symengine's constants (`E`, `e`, `I`, ...) -- reads back as that constant,
-  # so the renamed parameter would sit in the ini block doing nothing.
-  if (.rxIsReservedName(.var.name) || .var.name %in% names(.rxSEreserved)) {
+  # A reserved name (`t`, `time`, `M_PI`, `E`, ...) reads back as that
+  # constant, so the renamed parameter would sit in the ini block doing
+  # nothing.
+  if (.rxIsReservedPipeName(.var.name)) {
     stop("'", .var.name, "' is a reserved rxode2 variable; cannot rename '",
          .var.name2, "' to '", .var.name, "'",
          call.=FALSE)

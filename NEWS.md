@@ -80,12 +80,10 @@
   from the parser itself rather than a second copy in R.
 
 - `rxRename()` now refuses to rename a parameter to a reserved rxode2
-  variable or to one of symengine's constants.  `rxRename(t = tcl)` produced
-  the same unparseable model, and `rxRename(pi = tcl)` or
-  `rxRename(E = tcl)` produced a model that parsed but silently ignored the
-  renamed parameter, since the name reads back as the constant -- for the
-  symengine ones (`E`, `e`, `I`, `Catalan`, `GoldenRatio`, `EulerGamma`)
-  only inside the estimation models, where it is hardest to notice.
+  variable.  `rxRename(t = tcl)` produced the same unparseable model, and
+  `rxRename(pi = tcl)` or `rxRename(E = tcl)` produced a model that parsed but
+  silently ignored the renamed parameter, since the name reads back as the
+  constant.
 
 ### Event translation
 
