@@ -19,6 +19,19 @@
   .Call(`_rxode2_isLinCmt`)
 }
 
+#' Are these names reserved rxode2 variables?
+#'
+#' Wraps the parser's own `isReservedName()` so there is one list of reserved
+#' names; a reserved name is never a model parameter or covariate.
+#'
+#' @param x character vector of names to test
+#' @return logical vector the same length as `x`
+#' @author Matthew L. Fidler
+#' @noRd
+.rxIsReservedName <- function(x) {
+  .Call(`_rxode2_rxIsReservedName`, as.character(x))
+}
+
 .trans <- function(parse_file, prefix, model_md5, parseStr, isEscIn, inME, goodFuns, fullPrintIn) {
   .Call(`_rxode2_trans`,
         parse_file, prefix, model_md5, parseStr, isEscIn, inME, goodFuns, fullPrintIn)

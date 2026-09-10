@@ -26,6 +26,16 @@
   the append-only convention the struct already documents, so the stride was
   the whole of the disagreement.
 
+### Model piping
+
+- Model piping no longer promotes a reserved rxode2 variable to a population
+  parameter.  Appending or prepending a line that used `t`, `time`, `tlast`,
+  `newind`, `rxFlag`, one of the `M_` constants or `pi`/`NA`/`NaN`/`Inf`
+  added it to the `ini({})` block, and the resulting model then failed to
+  parse with "the following parameter(s) were in the ini block but not in the
+  model block".  Reserved names are now retained as-is, and the list comes
+  from the parser itself rather than a second copy in R.
+
 ### Event translation
 
 - A steady-state dose into a compartment with a modeled `alag()` pushed
