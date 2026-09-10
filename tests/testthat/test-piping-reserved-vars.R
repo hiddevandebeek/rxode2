@@ -155,6 +155,14 @@ rxTest({
                  "estimated or modeled")
   })
 
+  test_that("ini() piping rejects a reserved variable rather than adding it", {
+    for (nm in c("t", "time", "pi", "lhs", "E")) {
+      .call <- as.call(list(quote(ini), quote(.ui), call("<-", as.name(nm), 1)))
+      .ui <- .base()
+      expect_error(eval(.call), "cannot find parameter", info = nm)
+    }
+  })
+
   test_that("non-reserved variables are still promoted when appending", {
     ui <- .base()
     ui <- do.call(model, list(ui, quote(cp2 <- cp * exp(tf)), append = quote(cp)))
