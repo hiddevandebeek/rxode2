@@ -26,6 +26,49 @@
   the append-only convention the struct already documents, so the stride was
   the whole of the disagreement.
 
+### Mixture models
+
+- A `mix()` model whose call has been expanded by symengine -- the form
+  every estimation method's prediction model is built from -- is now still
+  recognized as a mixture model.  The expansion emits one reserved
+  `rx_mixsel_<k>_<n>_` selector per component, spelling out the component
+  count the dropped `mix()` call carried, so `mixnum` reports it and a
+  per-individual `mixest` supplied in the data or in `iCov` reaches the
+  solve.  The total is spelled out rather than inferred from the largest
+  selector present, because a component whose expression folds to zero --
+  any sensitivity with respect to an eta only one component uses -- drops
+  its selector out of the expression entirely.  Previously such a model parsed with no mixture at all: the
+  `mixest` column was discarded, `ind->mixest` stayed 0, and every
+  `mix()`-derived variable solved as 0 -- which silently corrupted the
+  predictions in the fit table (nlmixr2/nlmixr2est#1041).
+
+- `ind->mixest` is now set when the value is read from the data, not only
+  inside `_mix()`.  A model that reads `mixest` without calling `mix()`
+  never ran `_mix()`, so the supplied assignment never reached it.
+
+- A `mixest` or `mixunif` column in `iCov` now splits a homogeneous event
+  group when the model is a mixture model.  Subjects that share an event
+  table are solved as one group, and the group was only split on iCov
+  columns that are model parameters; `mixest` is a reserved variable, so the
+  whole group took the first subject's component.
+
+- `rx_mixsel_<k>_<n>_` is now a reserved variable name, like `mixest`,
+  `mixnum` and `mixunif`.  A model cannot use it for anything else, and
+  selectors that disagree with each other, or with a literal `mix()` in the
+  same model, about the number of components are a syntax error.
+
+- Note that the expansion drops the mixture PROBABILITIES along with the
+  `mix()` call, so an expanded model can be told which component a subject
+  belongs to (`mixest`) but cannot sample one from a supplied `mixunif`.
+  Simulation from `mixunif` needs the `mix()` call itself, which every
+  hand-written model keeps.
+
+- An `iCov` column that a homogeneous solve group is split on no longer
+  drops the subject when its value is `NA`.  The split key came from
+  `interaction()`, which is `NA` for a row with any `NA`, and the `split()`
+  it feeds discarded that row -- so the subject vanished from the solve
+  output instead of being rejected.
+
 ### Model piping
 
 - Model piping no longer promotes a reserved rxode2 variable to a population

@@ -4230,6 +4230,21 @@ static inline NumericVector getMixUnif(const RObject &ev1)  {
   return mixUnif;
 }
 
+// A mixest supplied per individual (from the data or from iCov) arrives in
+// mixunif carrying the >= 1.0 sentinel.  _mix() decodes that sentinel, but a
+// model whose mix() call was expanded to rx_mixsel_<k>_ selectors never calls
+// _mix() -- it reads ind->mixest directly -- so decode it here as well.
+static inline void rxSetIndMix(rx_solving_options_ind* ind, unsigned int nsub,
+                               const NumericVector& mixUnif) {
+  ind->mixest = 0;
+  if (nsub >= (unsigned int)mixUnif.size()) {
+    ind->mixunif = rxunifmix(ind);
+  } else {
+    ind->mixunif = mixUnif[nsub];
+    if (ind->mixunif >= 1.0) ind->mixest = (int) trunc(ind->mixunif);
+  }
+}
+
 // This loops through the data to put each individual into the
 // approiate data structure.
 // At the same time calculate hmax per individual as well
@@ -4516,14 +4531,10 @@ static inline void rxSolve_datSetupHmax(const RObject &obj, const List &rxContro
           ind->ndoses           = ndoses;
           ind->nevid2           = groupNevid2;
           ind->HMAX             = curHmax;
-          if (rx->mixnum) {
-            ind->mixest = 0;
-            if (nsub >= mixUnif.size()) {
-              ind->mixunif = rxunifmix(ind);
-            } else {
-              ind->mixunif = mixUnif[nsub];
-            }
-          }
+          // A homogeneous group is ONE translated subject, so the per-id
+          // mixest vector is indexed by the group, not by the expanded
+          // subject counter.
+          if (rx->mixnum) rxSetIndMix(ind, (unsigned int)groupIndex, mixUnif);
           nsub++;
         }
         if (groupNevid2 > 0) rx->hasEvid2 = 1;
@@ -4622,14 +4633,7 @@ static inline void rxSolve_datSetupHmax(const RObject &obj, const List &rxContro
             // Finalize last solve.
             ind->n_all_times    = ndoses+nobs;
             ind->n_all_times_orig = ind->n_all_times;
-            if (rx->mixnum) {
-              ind->mixest = 0;
-              if (nsub >= mixUnif.size()) {
-                ind->mixunif = rxunifmix(ind);
-              } else {
-                ind->mixunif = mixUnif[nsub];
-              }
-            }
+            if (rx->mixnum) rxSetIndMix(ind, nsub, mixUnif);
             if (ind->n_all_times > rx->maxAllTimes) rx->maxAllTimes= ind->n_all_times;
             ind->cov_ptr = &(_globals.gcov[curcovi]);
             for (ii = 0; ii < ncov; ii++){
@@ -4729,14 +4733,7 @@ static inline void rxSolve_datSetupHmax(const RObject &obj, const List &rxContro
       // Finalize the prior individual
       ind->n_all_times    = ndoses+nobs;
       ind->n_all_times_orig = ind->n_all_times;
-      if (rx->mixnum) {
-        ind->mixest = 0;
-        if (nsub >= mixUnif.size()) {
-          ind->mixunif = rxunifmix(ind);
-        } else {
-          ind->mixunif = mixUnif[nsub];
-        }
-      }
+      if (rx->mixnum) rxSetIndMix(ind, nsub, mixUnif);
       if (ind->n_all_times > rx->maxAllTimes) rx->maxAllTimes= ind->n_all_times;
       ind->cov_ptr = &(_globals.gcov[curcovi]);
       for (ii = 0; ii < ncov; ii++){
