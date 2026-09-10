@@ -7,6 +7,8 @@ rxTest({
                                         "pi", "NA", "NaN", "Inf"))))
     # the reserved variables the parser matches case-insensitively
     expect_true(all(.rxIsReservedName(c("Time", "TIME", "AMT"))))
+    # names the parser reserves through a pattern rather than a literal
+    expect_true(all(.rxIsReservedName(c("rx_mixsel_1_2_", "rx_mixsel_2_2_"))))
     # ordinary model variables are not reserved
     expect_false(any(.rxIsReservedName(c("tka", "ka", "cl", "v", "eta.ka",
                                          "add.sd", "wt", "T"))))
