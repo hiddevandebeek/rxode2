@@ -1790,13 +1790,30 @@ rxToSE <- function(x, envir = NULL, progress = FALSE,
 }
 
 
+# The reserved name of the k-th of n component selectors of an expanded mix().
+# A bare `mixest == k` loses the component count once the mix() call is gone;
+# this name keeps it, so the parser still reports the model as a mixture and
+# rxode2 will take a per-individual mixest from the data or iCov.  It goes into
+# symengine as an ordinary symbol -- it is constant in every eta, so it rides
+# through differentiation and comes back out unchanged.
+.rxMixSelName <- function(k, n) {
+  paste0("rx_mixsel_", as.integer(k), "_", as.integer(n), "_")
+}
+
 # Convert the mix() expression to a if clause with mixest for symengine
 .rxToSEMix <- function(x, envir = NULL, progress = FALSE, isEnv=TRUE) {
   .expr <- vapply(seq_along(x), function(i) {
     if (i %% 2 == 0)  {
       # Noting that argument 1 is the function name,
       # The even arguments are the mixture values
-      paste0("rxEq(mixest, ", i/2, ")*(", .rxToSE(x[[i]], envir = envir, progress = progress), ")")
+      .nm <- .rxMixSelName(i/2, length(x) %/% 2)
+      # the selector is generated here rather than read out of the model text,
+      # so it has to be introduced to the symengine environment by hand
+      if (isEnv && is.environment(envir) &&
+            !exists(.nm, envir = envir, inherits = FALSE)) {
+        assign(.nm, symengine::Symbol(.nm), envir = envir)
+      }
+      paste0(.nm, "*(", .rxToSE(x[[i]], envir = envir, progress = progress), ")")
     } else {
       ""
     }
