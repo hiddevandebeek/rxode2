@@ -64,6 +64,33 @@ rxTest({
     expect_equal(s$cp2, s$cp * exp(-s$time / 10))
   })
 
+  test_that("reserved variables are not added as covariates with auto=FALSE", {
+    for (v in c("t", "time", "pi", "M_PI", "NA", "Inf")) {
+      ui <- .base()
+      ui <- do.call(model, list(ui, str2lang(paste0("cp2 <- cp * ", v)),
+                                append = quote(cp), auto = FALSE))
+      expect_equal(ui$iniDf$name, c("tka", "tcl", "add.sd"), info = v)
+      expect_false(v %in% ui$allCovs, info = v)
+      expect_false(v %in% ui$mv$params, info = v)
+    }
+  })
+
+  test_that("a reserved variable in an error line is rejected, not promoted", {
+    # `t` cannot be an additive error standard deviation; the endpoint check
+    # has to see that rather than an auto-promoted `t` in the ini block
+    expect_error(do.call(model, list(.base(), quote(cp ~ add(t)))),
+                 "estimated or modeled")
+  })
+
+  test_that("rxRename refuses to rename a parameter to a reserved variable", {
+    expect_error(rxRename(.base(), t = tcl), "reserved rxode2 variable")
+    # a silent one: `pi` would parse as the constant, leaving the renamed
+    # parameter in the ini block doing nothing
+    expect_error(rxRename(.base(), pi = tcl), "reserved rxode2 variable")
+    # renaming to an ordinary name still works
+    expect_true("tcl2" %in% rxRename(.base(), tcl2 = tcl)$iniDf$name)
+  })
+
   test_that("non-reserved variables are still promoted when appending", {
     ui <- .base()
     ui <- do.call(model, list(ui, quote(cp2 <- cp * exp(tf)), append = quote(cp)))

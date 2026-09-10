@@ -79,6 +79,11 @@
   model block".  Reserved names are now retained as-is, and the list comes
   from the parser itself rather than a second copy in R.
 
+- `rxRename()` now refuses to rename a parameter to a reserved rxode2
+  variable.  `rxRename(t = tcl)` produced the same unparseable model, and
+  `rxRename(pi = tcl)` produced a model that parsed but silently ignored the
+  renamed parameter, since `pi` reads as the constant.
+
 ### Event translation
 
 - A steady-state dose into a compartment with a modeled `alag()` pushed

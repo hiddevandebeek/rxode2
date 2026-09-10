@@ -1000,7 +1000,10 @@ rxSetCovariateNamesForPiping <- function(covariates=NULL) {
 #' @noRd
 .addVariableToIniDf <- function(var, rxui, toEta=NA, value=1, promote=FALSE) {
   # reserved rxode2 names (t, time, tlast, newind, the M_ constants, ...) are
-  # never estimated parameters or covariates, so they are retained as-is
+  # never estimated parameters or covariates, so they are retained as-is.  "E"
+  # is not reserved by the parser but is symengine's Euler constant
+  # (`.rxSEreserved`), so an estimated parameter of that name would collide in
+  # the estimation models.
   if (.rxIsReservedName(var) || var == "E") {
     return(invisible())
   }

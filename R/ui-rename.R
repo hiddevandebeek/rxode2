@@ -30,6 +30,11 @@
   } else {
     .var.name2 <- as.character(line[[3]])
   }
+  if (.rxIsReservedName(.var.name)) {
+    stop("'", .var.name, "' is a reserved rxode2 variable; cannot rename '",
+         .var.name2, "' to '", .var.name, "'",
+         call.=FALSE)
+  }
   if (.var.name %in% vars) {
     stop("the new variable '", .var.name,
          "' is already present in the model; cannot replace '",
