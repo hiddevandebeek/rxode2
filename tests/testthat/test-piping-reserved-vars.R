@@ -84,11 +84,28 @@ rxTest({
 
   test_that("rxRename refuses to rename a parameter to a reserved variable", {
     expect_error(rxRename(.base(), t = tcl), "reserved rxode2 variable")
-    # a silent one: `pi` would parse as the constant, leaving the renamed
-    # parameter in the ini block doing nothing
+    # silent ones: `pi` parses as the constant, and each symengine constant
+    # reads back as its value in the estimation models, so in both cases the
+    # renamed parameter would sit in the ini block doing nothing
     expect_error(rxRename(.base(), pi = tcl), "reserved rxode2 variable")
+    for (nm in names(.rxSEreserved)) {
+      .call <- as.call(c(list(quote(rxRename), quote(.ui)),
+                         stats::setNames(list(quote(tcl)), nm)))
+      .ui <- .base()
+      expect_error(eval(.call), "reserved rxode2 variable", info = nm)
+    }
     # renaming to an ordinary name still works
     expect_true("tcl2" %in% rxRename(.base(), tcl2 = tcl)$iniDf$name)
+  })
+
+  test_that("E is kept out of the ini block but is still an ordinary covariate", {
+    # E is not reserved by the parser, so a model may legitimately read it from
+    # the data; it is only kept from becoming an ESTIMATED parameter, since
+    # symengine reads it back as Euler's number in the estimation models
+    ui <- .base()
+    ui <- do.call(model, list(ui, quote(cp2 <- cp * E), append = quote(cp)))
+    expect_false("E" %in% ui$iniDf$name)
+    expect_true("E" %in% ui$allCovs)
   })
 
   test_that("non-reserved variables are still promoted when appending", {
