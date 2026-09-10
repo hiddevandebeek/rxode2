@@ -12,9 +12,21 @@ rxTest({
     # ordinary model variables are not reserved
     expect_false(any(.rxIsReservedName(c("tka", "ka", "cl", "v", "eta.ka",
                                          "add.sd", "wt", "T"))))
+    # names new_or_ith() drops or rewrites before the reserved check
+    expect_true(all(.rxIsReservedName(c("lhs", "rxlin___", "cmt", "Cmt"))))
+    # ... but the exact spelling CMT is an ordinary variable
+    expect_false(.rxIsReservedName("CMT"))
     expect_equal(.rxIsReservedName(character(0)), logical(0))
     expect_equal(.rxIsReservedName(NA_character_), NA)
   })
+
+  # every name .addVariableToIniDf must refuse, in one place.  The piping
+  # branches reach it through different gates (the theta/eta regexes only let
+  # some names through at all), so the guard itself is exercised directly here.
+  .reserved <- c("t", "time", "Time", "tlast", "newind", "NEWIND", "rxFlag",
+                 "amt", "AMT", "mixnum", "mixest", "mixunif", "rx_mixsel_1_2_",
+                 "M_PI", "M_E", "M_LN10", "M_SQRT_2dPI", "pi", "NA", "NaN",
+                 "Inf", "lhs", "rxlin___", "cmt", "E")
 
   # a model with no reserved names in it, used as the piping base below
   .base <- function() {
@@ -32,6 +44,39 @@ rxTest({
       cp ~ add(add.sd)
     })
   }
+
+  test_that(".addVariableToIniDf refuses every reserved name", {
+    for (v in .reserved) {
+      ui <- rxUiDecompress(.base())
+      .before <- ui$iniDf
+      # promote=NA is the error-parameter path, which adds unconditionally;
+      # promote=TRUE is the population-parameter path
+      .addVariableToIniDf(v, ui, promote = NA)
+      .addVariableToIniDf(v, ui, promote = TRUE)
+      expect_equal(ui$iniDf, .before, info = v)
+    }
+    # a name that is not reserved does get added, so the loop above is not
+    # passing because .addVariableToIniDf never adds anything
+    .withCov <- function() {
+      ini({
+        tka <- log(1.5)
+        tcl <- log(1)
+        add.sd <- 0.7
+      })
+      model({
+        ka <- exp(tka)
+        cl <- exp(tcl + tf)
+        d/dt(depot) <- -ka * depot
+        d/dt(center) <- ka * depot - cl * center
+        cp <- center
+        cp ~ add(add.sd)
+      })
+    }
+    ui <- rxUiDecompress(.withCov())
+    expect_true("tf" %in% ui$allCovs)
+    .addVariableToIniDf("tf", ui, promote = TRUE)
+    expect_true("tf" %in% ui$iniDf$name)
+  })
 
   test_that("reserved variables are not promoted when appending", {
     for (v in c("t", "time", "tlast", "newind", "rxFlag", "M_PI", "pi",
@@ -84,6 +129,10 @@ rxTest({
 
   test_that("rxRename refuses to rename a parameter to a reserved variable", {
     expect_error(rxRename(.base(), t = tcl), "reserved rxode2 variable")
+    # `lhs` and any spelling of CMT but the exact one are dropped or rewritten
+    # by the parser, so the renamed parameter never reaches the model block
+    expect_error(rxRename(.base(), lhs = tcl), "reserved rxode2 variable")
+    expect_error(rxRename(.base(), cmt = tcl), "reserved rxode2 variable")
     # silent ones: `pi` parses as the constant and `E` reads back as Euler's
     # number in the estimation models, so in both cases the renamed parameter
     # would sit in the ini block doing nothing

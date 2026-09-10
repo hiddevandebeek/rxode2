@@ -80,7 +80,8 @@
   from the parser itself rather than a second copy in R.
 
 - `rxRename()` now refuses to rename a parameter to a reserved rxode2
-  variable.  `rxRename(t = tcl)` produced the same unparseable model, and
+  variable.  `rxRename(t = tcl)`, `rxRename(lhs = tcl)` and
+  `rxRename(cmt = tcl)` produced the same unparseable model, and
   `rxRename(pi = tcl)` or `rxRename(E = tcl)` produced a model that parsed but
   silently ignored the renamed parameter, since the name reads back as the
   constant.

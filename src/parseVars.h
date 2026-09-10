@@ -96,15 +96,20 @@ static inline int isReservedVariable(const char *s) {
 }
 
 
-// Names that can never be a user variable: the reserved variables above plus
-// the constants skipped by skipReservedVariables().  Exposed to R through
+// Names that can never be a user variable: the reserved variables above, the
+// constants skipped by skipReservedVariables(), and the names new_or_ith()
+// drops or rewrites before it reaches either.  Exposed to R through
 // `.rxIsReservedName()` so model piping does not promote them.
 static inline int isReservedName(const char *s) {
   return isReservedVariable(s) ||
     !strcmp("pi", s) ||
     !strcmp("NA", s) ||
     !strcmp("NaN", s) ||
-    !strcmp("Inf", s);
+    !strcmp("Inf", s) ||
+    !strcmp("lhs", s) ||
+    !strcmp("rxlin___", s) ||
+    // any spelling of CMT but the exact one is rewritten to CMT
+    (strcmp("CMT", s) && !rxstrcmpi("CMT", s));
 }
 
 static inline int isKa(const char *s) {
