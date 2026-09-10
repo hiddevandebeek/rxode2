@@ -38,7 +38,9 @@
 #' symengine's Euler constant (`.rxSEreserved`), so an `ini({})` entry of that
 #' name reads back as 2.718 in the estimation models and does nothing.  The
 #' rest of `.rxSEreserved` (`e`, `I`, ...) shadows a parameter the same way,
-#' but those names are accepted parameter names today, so they are left alone.
+#' but those names are accepted parameter names today, and a hand-written
+#' `ini({})` is shadowed just the same, so blocking them only here would not
+#' fix it; see issue #1359.
 #'
 #' @param x character vector of names to test
 #' @return logical vector the same length as `x`
