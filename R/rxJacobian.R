@@ -166,7 +166,7 @@ rxExpandGrid <- function(x, y, type = 0L) {
   .sn <- function(i, p) paste0("rx__sens_", state[i], "_BY_", params[p], "__")
   # differentiate by the symengine-side name: a state called `e`/`I`/`Catalan`
   # is bound under rx_SymPy_Res_* (#1359)
-  .stateSym <- lapply(state, .rxSEsym)
+  .stateSe <- .rxSEres(state)
   .lines <- character(0)
   .emit <- function(lhsSt, rhsSt, e) {
     if (is.null(e)) return(invisible())
@@ -185,7 +185,7 @@ rxExpandGrid <- function(x, y, type = 0L) {
     .dF_X_k <- list()
     for (k in seq_len(.ns)) {
       .fxik <- .fx(i, k); if (is.null(.fxik)) next
-      .d <- symengine::D(.fxik, .stateSym[[j]])
+      .d <- symengine::D(.fxik, .stateSe[j])
       if (paste(.d) != "0") {
         .dF_X_k[[k]] <- .d
       }
@@ -201,7 +201,7 @@ rxExpandGrid <- function(x, y, type = 0L) {
       }
       .fpip <- .fp(i, p)
       if (!is.null(.fpip)) {
-        .d <- symengine::D(.fpip, .stateSym[[j]])
+        .d <- symengine::D(.fpip, .stateSe[j])
         if (paste(.d) != "0") .acc <- if (is.null(.acc)) .d else .acc + .d
       }
       .emit(.sn(i, p), state[j], .acc)

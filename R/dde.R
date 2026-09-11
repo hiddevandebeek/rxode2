@@ -446,7 +446,7 @@
       if (!is.null(.tauRes) && inherits(.tauRes, "Basic")) {
         for (.pp in params) {
           ## assign before rxFromSE, which captures its argument (NSE)
-          .psym <- .rxSEsym(.pp)
+          .psym <- .rxSEres(.pp)
           .dD <- tryCatch(symengine::D(.tauRes, .psym), error = function(e) NULL)
           if (!is.null(.dD)) .dtauByP[.pp] <- rxFromSE(.dD)
         }
@@ -474,7 +474,7 @@
     ## sens-compartment pre-history: d(history)/d(param)
     if (is.null(.rhsB)) next
     for (.p in params) {
-      .dp <- tryCatch(symengine::D(.rhsB, .rxSEsym(.p)), error = function(e) NULL)
+      .dp <- tryCatch(symengine::D(.rhsB, .rxSEres(.p)), error = function(e) NULL)
       if (is.null(.dp)) next
       .dpTxt <- rxFromSE(.dp)
       if (identical(.dpTxt, "0")) next
@@ -606,7 +606,7 @@
       for (.p in calcSens) {
         .dt <- "0"
         if (!is.null(.tauRes) && inherits(.tauRes, "Basic")) {
-          .dD <- tryCatch(symengine::D(.tauRes, .rxSEsym(.p)), error = function(e) NULL)
+          .dD <- tryCatch(symengine::D(.tauRes, .rxSEres(.p)), error = function(e) NULL)
           if (!is.null(.dD)) .dt <- rxode2::rxFromSE(.dD)
         }
         if (identical(.dt, "0")) next
@@ -736,7 +736,7 @@
     if (is.null(.f)) return(list())
     .out <- list()
     for (.k in .st) {
-      .d <- tryCatch(symengine::D(.f, .rxSEsym(.k)), error = function(e) NULL)
+      .d <- tryCatch(symengine::D(.f, .rxSEres(.k)), error = function(e) NULL)
       if (is.null(.d)) next
       .t <- rxode2::rxFromSE(.d)
       if (!identical(.t, "0")) .out[[.k]] <- .t
@@ -934,8 +934,8 @@
       .mm <- regmatches(.cmt, regexec(
         paste0("^rx__sens_", .si, "_BY_(.+)_BY_(.+)__$"), .cmt))[[1L]]
       if (length(.mm) != 3L) next
-      .d2 <- tryCatch(symengine::D(symengine::D(.rhsB, .rxSEsym(.mm[2L])),
-                                   .rxSEsym(.mm[3L])),
+      .d2 <- tryCatch(symengine::D(symengine::D(.rhsB, .rxSEres(.mm[2L])),
+                                   .rxSEres(.mm[3L])),
                       error = function(e) NULL)
       if (is.null(.d2)) next
       .d2Txt <- rxFromSE(.d2)
@@ -988,7 +988,7 @@
       .jdE <- symengine::D(.fsub, .g)                       # JD = df/dg
       .hgy <- list()
       for (.mState in .states) {                            # H_gy = d^2 f/dg dy
-        .ym <- .rxSEsym(.mState)
+        .ym <- .rxSEres(.mState)
         .v <- .nz(symengine::D(.jdE, .ym))
         if (!is.null(.v)) .hgy[[.mState]] <- .v
       }
@@ -998,7 +998,7 @@
       })
       .hgp <- list()
       for (.pp in params) {                                 # H_gp = d^2 f/dg dp
-        .v <- .nz(symengine::D(.jdE, .rxSEsym(.pp)))
+        .v <- .nz(symengine::D(.jdE, .rxSEres(.pp)))
         if (!is.null(.v)) .hgp[[.pp]] <- .v
       }
       ## param-dependent delay: d tau/dp and d^2 tau/dp dq weight the
@@ -1010,7 +1010,7 @@
       if (!is.null(.tauRes) && inherits(.tauRes, "Basic")) {
         .dE <- list()
         for (.pp in params) {
-          .psym <- .rxSEsym(.pp)
+          .psym <- .rxSEres(.pp)
           .dpp <- tryCatch(symengine::D(.tauRes, .psym), error = function(e) NULL)
           if (!is.null(.dpp)) {
             .dtau[.pp] <- rxFromSE(.dpp)
@@ -1020,7 +1020,7 @@
         for (.p1 in params) {
           if (is.null(.dE[[.p1]]) || identical(.dtau[[.p1]], "0")) next
           for (.p2 in params) {
-            .d2 <- tryCatch(symengine::D(.dE[[.p1]], .rxSEsym(.p2)),
+            .d2 <- tryCatch(symengine::D(.dE[[.p1]], .rxSEres(.p2)),
                             error = function(e) NULL)
             if (!is.null(.d2)) {
               .txt <- rxFromSE(.d2)
@@ -1183,7 +1183,7 @@
       .g <- symengine::S(.t$gName)
       .jdE <- symengine::D(.fsub, .g)
       for (.zName in c(.states, vapply(.terms, function(z) z$gName, character(1L)))) {
-        .zsym <- .rxSEsym(.zName)
+        .zsym <- .rxSEres(.zName)
         .d <- symengine::D(.jdE, .zsym)
         if (!identical(rxFromSE(.d), "0")) {
           stop("nonlinear delay 'delay(", .t$stateJ, ", ", .t$tau,
@@ -1260,7 +1260,7 @@
       ## reject nonlinear delays; assign symengine results before rxFromSE
       ## (which captures its argument)
       for (.mState in .states) {
-        .msym <- .rxSEsym(.mState)
+        .msym <- .rxSEres(.mState)
         .dm <- symengine::D(.jdE, .msym)
         if (!identical(rxFromSE(.dm), "0")) {
           stop("nonlinear delay 'delay(", .t$stateJ, ", ", .t$tau,
@@ -1279,14 +1279,14 @@
       .hgp <- list()
       .dE <- list()
       for (.pp in params) {
-        .d <- symengine::D(.jdE, .rxSEsym(.pp))
+        .d <- symengine::D(.jdE, .rxSEres(.pp))
         .txt <- rxFromSE(.d)
         if (!identical(.txt, "0")) { .hgp[[.pp]] <- .restore(.txt); .dE[[.pp]] <- .d }
       }
       .hgpp <- list()
       for (.p1 in names(.dE)) {
         for (.p2 in params) {
-          .d2 <- symengine::D(.dE[[.p1]], .rxSEsym(.p2))
+          .d2 <- symengine::D(.dE[[.p1]], .rxSEres(.p2))
           .txt <- rxFromSE(.d2)
           if (!identical(.txt, "0")) .hgpp[[paste0(.p1, "|", .p2)]] <- .restore(.txt)
         }

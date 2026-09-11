@@ -57,10 +57,56 @@ rxTest({
                       .n, fixed = TRUE))
   })
 
-  test_that(".rxSEres()/.rxSEsym() mangle only the reserved names", {
+  test_that("a parameter named like a constant solves like any other name", {
+    .mk <- function(v) {
+      rxode2(sprintf(paste0("ka=exp(tka);\ncl=exp(tcl+%s);\n",
+                            "d/dt(depot)=-ka*depot;\n",
+                            "d/dt(center)=ka*depot-cl*center;\n"), v),
+             calcSens = TRUE)
+    }
+    .ev <- et(amt = 100) %>% et(seq(0, 24, by = 2))
+    .a <- rxSolve(.mk("e"), .ev, params = c(tka = 0.4, tcl = -0.1, e = 0.2),
+                  returnType = "data.frame", atol = 1e-11, rtol = 1e-11)
+    .b <- rxSolve(.mk("ee"), .ev, params = c(tka = 0.4, tcl = -0.1, ee = 0.2),
+                  returnType = "data.frame", atol = 1e-11, rtol = 1e-11)
+    names(.a) <- sub("_BY_e__", "_BY_ee__", names(.a), fixed = TRUE)
+    expect_equal(sort(names(.a)), sort(names(.b)))
+    expect_equal(as.matrix(.a[names(.b)]), as.matrix(.b))
+  })
+
+  test_that("jump event-sensitivities wrt a parameter named like a constant", {
+    # .rxEventSensDExpr() tested the model-side name against symengine-side free
+    # symbols, so the term was silently dropped rather than erroring
+    .mk <- function(v) {
+      sprintf(paste0("ka=exp(tka);\ncl=exp(tcl);\nf(depot)=expit(%s);\n",
+                     "d/dt(depot)=-ka*depot;\n",
+                     "d/dt(center)=ka*depot-cl*center;\n"), v)
+    }
+    .ev <- et(amt = 100) %>% et(seq(0, 24, by = 2))
+    .p <- c(tka = 0.4, tcl = -0.1)
+    .a <- rxSolve(rxode2(.mk("e"), calcSens = "e", eventSens = "jump"), .ev,
+                  params = c(.p, e = 0.2), returnType = "data.frame",
+                  atol = 1e-11, rtol = 1e-11)
+    .b <- rxSolve(rxode2(.mk("ee"), calcSens = "ee", eventSens = "jump"), .ev,
+                  params = c(.p, ee = 0.2), returnType = "data.frame",
+                  atol = 1e-11, rtol = 1e-11)
+    expect_equal(.a$rx__sens_center_BY_e__, .b$rx__sens_center_BY_ee__)
+    # and it is the real derivative, not zero
+    .mb <- rxode2(.mk("e"))
+    .h <- 1e-6
+    .fd <- (rxSolve(.mb, .ev, params = c(.p, e = 0.2 + .h),
+                    returnType = "data.frame", atol = 1e-11, rtol = 1e-11)$center -
+            rxSolve(.mb, .ev, params = c(.p, e = 0.2 - .h),
+                    returnType = "data.frame", atol = 1e-11, rtol = 1e-11)$center) / (2 * .h)
+    expect_lt(max(abs(.a$rx__sens_center_BY_e__ - .fd)), 1e-5)
+    expect_gt(max(abs(.fd)), 1)
+  })
+
+  test_that(".rxSEres() mangles only the reserved names", {
     expect_equal(.rxSEres(c("e", "cl", "I", "eta.cl")),
                  c("rx_SymPy_Res_e", "cl", "rx_SymPy_Res_I", "eta.cl"))
-    expect_equal(as.character(.rxSEsym("e")), "rx_SymPy_Res_e")
-    expect_equal(as.character(.rxSEsym("eta.cl")), "eta.cl")
+    expect_equal(.rxSEres(character(0)), character(0))
+    expect_equal(.rxSEres(names(.rxSEreserved)),
+                 paste0("rx_SymPy_Res_", names(.rxSEreserved)))
   })
 })

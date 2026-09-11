@@ -3429,6 +3429,13 @@ local({
 #' plain name as the matching constant (`.rxSEreserved`); everything else keeps
 #' its name.  Mirrors `symengineRes()` (`src/expm.cpp`).
 #'
+#' Pass the result to `symengine::D()` rather than the model-side name: `D()`
+#' resolves a character to a `Symbol` (so a dotted name such as `eta.cl` is
+#' fine), while `symengine::S()` re-parses and reads a reserved name back as
+#' the constant -- "Input is not a SYMBOL" (#1359).  A character also keeps
+#' `D()`'s `stats::D` fallback working for the non-`Basic` expressions the
+#' environment stores for a constant (`f(depot) <- 0.8`).
+#'
 #' @param name character vector of model variable names
 #' @return character vector of symengine names
 #' @author Matthew L. Fidler
@@ -3437,21 +3444,6 @@ local({
   .w <- name %in% names(.rxSEreserved)
   if (any(.w)) name[.w] <- paste0("rx_SymPy_Res_", name[.w])
   name
-}
-
-#' The symengine `Symbol` to differentiate by for a model variable
-#'
-#' `symengine::S()` re-parses, so it reads a model variable called `e`, `I`,
-#' `Catalan`, ... as the matching constant and `D()` then fails with "Input is
-#' not a SYMBOL" (#1359); it also rejects a dotted rxode2 name (`eta.cl`).
-#' `Symbol()` on the `rx_SymPy_Res_*` name avoids both.
-#'
-#' @param name model variable name (length one)
-#' @return symengine `Symbol`
-#' @author Matthew L. Fidler
-#' @noRd
-.rxSEsym <- function(name) {
-  symengine::Symbol(.rxSEres(name))
 }
 
 #' Stop symengine's constants from shadowing model variables of the same name
