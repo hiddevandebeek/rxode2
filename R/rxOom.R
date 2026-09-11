@@ -350,8 +350,19 @@ rxMemSummary.rxEtFile <- function(x, ...) {
     .obsPerSub <- tryCatch(
       .rxOomObsPerSubject(object, .evDfAll, .ctl, .allIds),
       error=function(e) NULL)
-    if (is.null(.obsPerSub)) {
+    # An event table with no observations at all is one `rxSolve()` adds its
+    # own sampling times to (`from`/`to`/`by`/`length.out`), so the count here
+    # is not the count the solve uses; leave that case alone.  Say so rather
+    # than leave it to be discovered: not reproducing the unchunked draw is
+    # exactly what a user asking for a chunked solve would not expect.
+    if (is.null(.obsPerSub) || sum(.obsPerSub) == 0L) {
       .simSigma <- FALSE
+      warning("a chunked solve could not work out how many residuals this ",
+              "event table needs, so each chunk draws its own: the result is ",
+              "a valid simulation but not the same draw as the unchunked ",
+              "solve.  Give the event table its own sampling times rather ",
+              "than relying on 'from'/'to'/'by'.",
+              call.=FALSE)
     } else {
       .obsStart <- c(0L, cumsum(.obsPerSub))
       .nObs     <- as.integer(.obsStart[length(.obsStart)])

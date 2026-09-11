@@ -909,6 +909,31 @@ rxTest({
     .cmp(.addl, nStud=3, dfSub=10, addDosing=NA)
   })
 
+  test_that("a chunked solve says so when it cannot share the residual draw", {
+    skip_on_cran()
+
+    ## an event table with no observations is one rxSolve() adds its own
+    ## sampling times to, so the record count the residual draw needs is not
+    ## something the event table itself answers -- the chunks draw their own,
+    ## which is valid but is not the unchunked draw
+    .m <- rxode2({
+      ka <- exp(tka + eta.ka)
+      cl <- exp(tcl + eta.cl)
+      v <- exp(tv)
+      cp <- linCmt()
+      cp2 <- cp * (1 + prop.err)
+    })
+    .ev <- as.data.frame(et(amt=100, id=1:4))
+    .om <- lotri::lotri(eta.ka + eta.cl ~ c(0.1, 0.01, 0.1))
+    .sg <- lotri::lotri(prop.err ~ 0.1)
+    .p <- c(tka=0.45, tcl=1, tv=3.45)
+
+    expect_warning(
+      rxSolve(.m, .ev, params=.p, omega=.om, sigma=.sg, nStud=3, dfSub=10,
+              file=tempfile(fileext=".parquet"), chunkSize=2),
+      "not the same draw")
+  })
+
   test_that("a parallel chunked solve reproduces the unchunked solve with a sigma", {
     skip_on_cran()
     skip_if_not_installed("mirai")
