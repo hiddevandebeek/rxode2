@@ -3450,6 +3450,34 @@ local({
   name
 }
 
+#' Rename every reserved name in a parsed model expression to its symengine name
+#'
+#' `rxFromSE()` renders an expression with model-side names, so re-parsing that
+#' text with `symengine::S()` -- or evaluating it in the model environment --
+#' reads a variable called `e`, `E`, `I`, ... as the matching constant (#1359).
+#' Walk the expression and swap each such symbol for its `rx_SymPy_Res_*` name
+#' first; `rxFromSE()` maps them back on the way out.  Function names are left
+#' alone (the call head is never one of these).
+#'
+#' @param e a parsed model expression (`language`)
+#' @return `e` with reserved symbols renamed
+#' @author Matthew L. Fidler
+#' @noRd
+.rxSEresLang <- function(e) {
+  if (is.name(e)) {
+    .n <- as.character(e)
+    # the empty symbol (an omitted argument) is a name that as.name() cannot
+    # rebuild, so leave it be
+    if (!nzchar(.n)) return(e)
+    .m <- .rxSEres(.n)
+    return(if (identical(.m, .n)) e else as.name(.m))
+  }
+  if (is.call(e) && length(e) > 1L) {
+    for (.i in seq_along(e)[-1L]) e[[.i]] <- .rxSEresLang(e[[.i]])
+  }
+  e
+}
+
 #' The one reserved name that cannot be unshadowed
 #'
 #' `E` is the symengine spelling of the model language's `M_E` (`.rxSEcnt`), so

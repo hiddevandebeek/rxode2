@@ -106,6 +106,27 @@ rxTest({
     expect_true(grepl("f(rx__sens_cen_BY_e__)=", .n, fixed = TRUE))
   })
 
+  test_that("the delay jump map keeps a parameter named like a constant", {
+    # .rxDelaySensJumpMap() re-parses the rxFromSE() text of d/dt() with
+    # symengine::S(), which reads a model-side `e` as Euler's number: the jump
+    # amplitude came out as -(M_E)*(1.5) instead of -(e)*(1.5)
+    .m <- .rxDelaySensJumpMap("cl=0.3;\nd/dt(cen)=-cl*cen+e*delay(cen,1.5*e);\n",
+                              "e")
+    expect_true(any(grepl("f(rx__sens_cen_BY_e__)=-(e)*(1.5)", .m$alagf, fixed = TRUE)))
+    expect_false(any(grepl("M_E", .m$alagf, fixed = TRUE)))
+  })
+
+  test_that("a delay duration depending on E still resolves", {
+    # `E` is deliberately left bound to Euler's number in the environment, so the
+    # duration text has to be translated before it is evaluated there -- otherwise
+    # it evaluates to a plain numeric, the "Basic" check fails and the
+    # breaking-point corrections are dropped
+    .m <- .rxDelaySensJumpMap("cl=0.3;\nd/dt(cen)=-cl*cen+0.1*delay(cen,1.5*E);\n",
+                              "E")
+    expect_true(any(grepl("alag(rx__sens_cen_BY_E__)", .m$alagf, fixed = TRUE)))
+    expect_true(any(grepl("f(rx__sens_cen_BY_E__)=-(0.1)*(1.5)", .m$alagf, fixed = TRUE)))
+  })
+
   test_that("mu-referencing keeps a covariate parameter named like a constant", {
     .f <- function() {
       ini({

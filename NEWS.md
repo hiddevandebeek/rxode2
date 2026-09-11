@@ -99,10 +99,11 @@
   code silently dropped the term instead of erroring.  A `matExp()`/`indLin()`
   model likewise emitted `k_p_q=exp(1)` for a rate constant that was the
   parameter `e`, `lag(e, 1)` lagged Euler's number, and a delay whose duration
-  depended on `e` lost its breaking-point correction terms (#1359).  `E` is the
-  one exception: it is the symengine spelling of the model language's `M_E`,
-  so the environment's `E` still means Euler's number and a model variable of
-  that name is reached through its internal name instead.
+  depended on `e` lost its breaking-point correction terms and then computed
+  its jump amplitude from `M_E` (#1359).  `E` is the one exception: it is the
+  symengine spelling of the model language's `M_E`, so the environment's `E`
+  still means Euler's number and a model variable of that name is reached
+  through its internal name instead.
 
 ### Event translation
 

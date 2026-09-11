@@ -441,7 +441,7 @@
       .dtauByP <- stats::setNames(rep("0", length(params)), params)
       ## eval the duration text in the env to resolve intermediates (S() on a
       ## function expression is intercepted here)
-      .tauRes <- tryCatch(eval(parse(text = .tau), envir = model),
+      .tauRes <- tryCatch(eval(.rxSEresLang(parse(text = .tau)[[1L]]), envir = model),
                           error = function(e) NULL)
       if (!is.null(.tauRes) && inherits(.tauRes, "Basic")) {
         for (.pp in params) {
@@ -600,9 +600,12 @@
       .stateJ <- deparse1(.dc[[2L]]); .tau <- deparse1(.dc[[3L]])
       if (is.na(match(.stateJ, .st))) next
       .g <- "rx__gdlyJTMP__"
-      .dj <- symengine::D(symengine::S(deparse1(.substDelay(.full, .dc, as.name(.g)))), symengine::S(.g))
+      .dj <- symengine::D(
+        symengine::S(deparse1(.rxSEresLang(.substDelay(.full, .dc, as.name(.g))))),
+        symengine::S(.g))
       .djTxt <- gsub(.g, paste0("delay(", .stateJ, ",", .tau, ")"), rxode2::rxFromSE(.dj), fixed = TRUE)
-      .tauRes <- tryCatch(eval(parse(text = .tau), envir = .m), error = function(e) NULL)
+      .tauRes <- tryCatch(eval(.rxSEresLang(parse(text = .tau)[[1L]]), envir = .m),
+                          error = function(e) NULL)
       for (.p in calcSens) {
         .dt <- "0"
         if (!is.null(.tauRes) && inherits(.tauRes, "Basic")) {
@@ -1005,7 +1008,7 @@
       ## rxDelayD/rxDelayD2 corrections below ("0" for a constant delay)
       .dtau <- stats::setNames(rep("0", length(params)), params)
       .d2tau <- list()
-      .tauRes <- tryCatch(eval(parse(text = .t$tau), envir = model),
+      .tauRes <- tryCatch(eval(.rxSEresLang(parse(text = .t$tau)[[1L]]), envir = model),
                           error = function(e) NULL)
       if (!is.null(.tauRes) && inherits(.tauRes, "Basic")) {
         .dE <- list()

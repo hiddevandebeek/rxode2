@@ -286,7 +286,7 @@
       # d f_i / d(delay(y_j, tau)): substitute a plain symbol for delay(), then
       # differentiate w.r.t. it.
       .gName <- "rx__gdlyATMP__"
-      .modTxt <- deparse1(.substDelay(.fullExpr, .dc, as.name(.gName)))
+      .modTxt <- deparse1(.rxSEresLang(.substDelay(.fullExpr, .dc, as.name(.gName))))
       .dj <- symengine::D(symengine::S(.modTxt), symengine::S(.gName))
       .djTxt <- gsub(.gName, paste0("delay(", .stateJ, ",", .tau, ")"),
                      rxode2::rxFromSE(.dj), fixed = TRUE)
@@ -297,7 +297,8 @@
       # Param-dependent delay tau(p): d tau / d p per calcSens param (resolved in
       # the symengine env), feeding the breaking-point correction to F_p below.
       .dtauByP <- stats::setNames(rep("0", .np), calcSens)
-      .tauRes <- tryCatch(eval(parse(text = .tau), envir = .model), error = function(e) NULL)
+      .tauRes <- tryCatch(eval(.rxSEresLang(parse(text = .tau)[[1L]]), envir = .model),
+                          error = function(e) NULL)
       if (!is.null(.tauRes) && inherits(.tauRes, "Basic")) {
         for (.pp in calcSens) {
           .dD <- tryCatch(symengine::D(.tauRes, .rxSEres(.pp)), error = function(e) NULL)
