@@ -63,6 +63,19 @@ rxTest({
     expect_equal(rxFromSE(.d), "exp(e+tcl)")
   })
 
+  test_that("differentiating by the name as a string needs .rxSEres()", {
+    # this is how every downstream call site differentiates.  The raw model name
+    # is the silent case: symengine reads "e" as the constant and D() returns 0
+    # rather than erroring, so the term is dropped with no diagnostic.
+    .D <- symengine::D
+    .s <- rxS(rxModelVars("cl=exp(tcl+e);\nd/dt(center)=-cl*center;\n"))
+    .b <- .s$cl
+    .good <- .D(.b, .rxSEres("e"))
+    .raw <- .D(.b, "e")
+    expect_equal(paste(.raw), "0")
+    expect_equal(rxFromSE(.good), "exp(e+tcl)")
+  })
+
   test_that("lag() of a variable named like a symengine constant round-trips", {
     # .rxToSELagOrLead()'s .vref() wraps the variable in symengine::S()
     expect_equal(rxNorm("b=lag(e,1);\nd/dt(center)=-b*center;\n"),

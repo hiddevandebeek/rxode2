@@ -95,6 +95,17 @@ rxTest({
     expect_equal(.b, "d/dt(cen)=-cen*e+0.1*delay(cen, 1.5)")
   })
 
+  test_that("a parameter-dependent delay differentiates by a name like a constant", {
+    # d(tau)/dp is symengine::D(.tauRes, ...) in R/dde.R.  With the raw model
+    # name that call failed inside a tryCatch, so dtauByP stayed "0" and the
+    # breaking-point correction terms were silently dropped from the model.
+    .n <- rxNorm(rxode2("d/dt(cen)=-e*cen+0.1*delay(cen, 1.5*e);\n",
+                        calcSens = "e"))
+    expect_true(grepl("rxDelayD(cen,1.5*e)", .n, fixed = TRUE))
+    expect_true(grepl("alag(rx__sens_cen_BY_e__)=1.5*e", .n, fixed = TRUE))
+    expect_true(grepl("f(rx__sens_cen_BY_e__)=", .n, fixed = TRUE))
+  })
+
   test_that("mu-referencing keeps a covariate parameter named like a constant", {
     .f <- function() {
       ini({
