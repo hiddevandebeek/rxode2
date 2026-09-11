@@ -102,6 +102,22 @@ rxTest({
     expect_gt(max(abs(.fd)), 1)
   })
 
+  test_that("matExp()/indLin() rate constants keep a parameter named e", {
+    # .multCollapse() re-parsed model-side text with symengine::S(), which read
+    # the parameter `e` as Euler's number: k_p_q=exp(1) instead of k_p_q=e
+    .n <- rxNorm(rxode2("d/dt(p)=-e*p;\nd/dt(q)=e*p-k*q;\n", indLin = TRUE))
+    expect_true(grepl("k_p_q=e;", .n, fixed = TRUE))
+    expect_false(grepl("exp(1)", .n, fixed = TRUE))
+  })
+
+  test_that("lag() of a variable named like a symengine constant round-trips", {
+    # .rxToSELagOrLead()'s .vref() wraps the variable in symengine::S()
+    expect_equal(rxNorm("b=lag(e,1);\nd/dt(center)=-b*center;\n"),
+                 "b=lag(e,1);\nd/dt(center)=-b*center;\n")
+    .s <- rxS(rxModelVars("b=lag(e,1);\nd/dt(center)=-b*center;\n"))
+    expect_true(any(grepl("lag(e,1)", .s$..lhs, fixed = TRUE)))
+  })
+
   test_that(".rxSEres() mangles only the reserved names", {
     expect_equal(.rxSEres(c("e", "cl", "I", "eta.cl")),
                  c("rx_SymPy_Res_e", "cl", "rx_SymPy_Res_I", "eta.cl"))

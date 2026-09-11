@@ -1532,7 +1532,11 @@ rxToSE <- function(x, envir = NULL, progress = FALSE,
   # (`with(envir, ...)`) would otherwise inline an lhs variable's definition and
   # break the call, so wrap the variable in symengine::S("var") to keep it a raw
   # symbol; it round-trips back to the bare name in rxFromSE().
-  .vref <- function(v) if (isEnv) paste0("symengine::S(\"", v, "\")") else v
+  .vref <- function(v) {
+    # .rxSEres(): a variable named like a symengine constant is bound under its
+    # rx_SymPy_Res_* name, and S() would read the plain name as the constant
+    if (isEnv) paste0("symengine::S(\"", .rxSEres(v), "\")") else v
+  }
   if (.len == 1L) {
     stop(.fun, "() takes 1-2 arguments")
   } else if (.len == 2L) {
@@ -4937,7 +4941,7 @@ rxFun2c <- function(fun, name, onlyF=FALSE) {
     .lastValue <- .s$rxLastValue
     return(c(list(.ret),
       lapply(.env$args, function(v) {
-      .v <- symengine::D(.lastValue, symengine::S(v))
+      .v <- symengine::D(.lastValue, .rxSEres(v))
       .v <- paste0("function(", paste(.env$args, collapse=", "), ") {\n", rxOptExpr(paste0("rxLastValue=", rxFromSE(.v)), msg=paste0("d(", .funName, ")/d(", v, ")")),
                    "\nrxLastValue}")
       .v <- eval(str2lang(.v))

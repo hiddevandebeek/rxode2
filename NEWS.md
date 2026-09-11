@@ -96,7 +96,9 @@
   SYMBOL"; the remaining `symengine::D()` call sites in the Jacobian, adjoint,
   delay-differential, event-sensitivity and mu-referencing code also passed
   the model-side name straight to symengine, which for the event-sensitivity
-  code silently dropped the term instead of erroring (#1359).
+  code silently dropped the term instead of erroring.  A `matExp()`/`indLin()`
+  model likewise emitted `k_p_q=exp(1)` for a rate constant that was the
+  parameter `e` (#1359).
 
 ### Event translation
 
