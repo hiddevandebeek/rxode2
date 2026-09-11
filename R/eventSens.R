@@ -639,12 +639,12 @@
   .vars <- .rxEventSensFreeSyms(sym)
   ## assign symengine results before rxFromSE (NSE capture; see R/dde.R)
   .tot <- NULL
-  if (param %in% .vars) {
-    .tot <- symengine::D(sym, symengine::S(param))
+  if (.rxSEres(param) %in% .vars) {
+    .tot <- symengine::D(sym, .rxSEsym(param))
   }
   for (.l in states) {
-    if (!(.l %in% .vars)) next
-    .dl <- symengine::D(sym, symengine::S(.l))
+    if (!(.rxSEres(.l) %in% .vars)) next
+    .dl <- symengine::D(sym, .rxSEsym(.l))
     .dlTxt <- rxFromSE(.dl)
     if (.dlTxt != "0" && .dlTxt != "0.0") {
       .S <- symengine::S(paste0("rx__sens_", .l, "_BY_", param, "__"))
@@ -667,12 +667,12 @@
 .rxEventSensDSym <- function(sym, param, states) {
   .vars <- .rxEventSensFreeSyms(sym)
   .tot <- NULL
-  if (param %in% .vars) {
-    .tot <- symengine::D(sym, symengine::S(param))
+  if (.rxSEres(param) %in% .vars) {
+    .tot <- symengine::D(sym, .rxSEsym(param))
   }
   for (.l in states) {
-    if (!(.l %in% .vars)) next
-    .dl <- symengine::D(sym, symengine::S(.l))
+    if (!(.rxSEres(.l) %in% .vars)) next
+    .dl <- symengine::D(sym, .rxSEsym(.l))
     .dlTxt <- rxFromSE(.dl)
     if (.dlTxt != "0" && .dlTxt != "0.0") {
       .S <- symengine::S(paste0("rx__sens_", .l, "_BY_", param, "__"))
@@ -716,13 +716,13 @@
   .vars <- .rxEventSensFreeSyms(.dgp)
   .tot <- NULL
   ## direct partial wrt q
-  if (q %in% .vars) {
-    .tot <- symengine::D(.dgp, symengine::S(q))
+  if (.rxSEres(q) %in% .vars) {
+    .tot <- symengine::D(.dgp, .rxSEsym(q))
   }
   ## state-coupling: d/dx_l * S^q_l
   for (.l in states) {
-    if (!(.l %in% .vars)) next
-    .dxl <- symengine::D(.dgp, symengine::S(.l))
+    if (!(.rxSEres(.l) %in% .vars)) next
+    .dxl <- symengine::D(.dgp, .rxSEsym(.l))
     if (rxFromSE(.dxl) %in% c("0", "0.0")) next
     .Sq <- symengine::S(paste0("rx__sens_", .l, "_BY_", q, "__"))
     .term <- .dxl * .Sq
@@ -760,13 +760,13 @@
   .vars <- .rxEventSensFreeSyms(.dgpq)
   .tot <- NULL
   ## direct partial wrt r
-  if (r %in% .vars) {
-    .tot <- symengine::D(.dgpq, symengine::S(r))
+  if (.rxSEres(r) %in% .vars) {
+    .tot <- symengine::D(.dgpq, .rxSEsym(r))
   }
   ## state-coupling: d/dx_l * S^r_l
   for (.l in states) {
-    if (!(.l %in% .vars)) next
-    .dxl <- symengine::D(.dgpq, symengine::S(.l))
+    if (!(.rxSEres(.l) %in% .vars)) next
+    .dxl <- symengine::D(.dgpq, .rxSEsym(.l))
     if (rxFromSE(.dxl) %in% c("0", "0.0")) next
     .Sr <- symengine::S(paste0("rx__sens_", .l, "_BY_", r, "__"))
     .term <- .dxl * .Sr
@@ -963,7 +963,7 @@
         .fSymName <- paste0("rx__d_dt_", .kName, "__")
         if (!exists(.fSymName, envir = .model)) next
         .fSym <- get(.fSymName, envir = .model)
-        .Jkc <- tryCatch(symengine::D(.fSym, symengine::S(.cName)),
+        .Jkc <- tryCatch(symengine::D(.fSym, .rxSEsym(.cName)),
                          error = function(e) NULL)
         if (is.null(.Jkc)) next
         .JkcTxt <- rxFromSE(.Jkc)

@@ -43,7 +43,7 @@
     if (!is.null(.fSE)) {
       .fStr[[.c]] <- rxode2::rxFromSE(.fSE)
       .dFdpStr[[.c]] <- vapply(calcSens, function(p) {
-        .d <- symengine::D(.fSE, p); rxode2::rxFromSE(.d) }, character(1))
+        .d <- symengine::D(.fSE, .rxSEsym(p)); rxode2::rxFromSE(.d) }, character(1))
     }
   }
   ## pre-parse every expression once and evaluate the parsed forms against a
@@ -300,7 +300,7 @@
       .tauRes <- tryCatch(eval(parse(text = .tau), envir = .model), error = function(e) NULL)
       if (!is.null(.tauRes) && inherits(.tauRes, "Basic")) {
         for (.pp in calcSens) {
-          .dD <- tryCatch(symengine::D(.tauRes, symengine::S(.pp)), error = function(e) NULL)
+          .dD <- tryCatch(symengine::D(.tauRes, .rxSEsym(.pp)), error = function(e) NULL)
           if (!is.null(.dD)) .dtauByP[.pp] <- rxode2::rxFromSE(.dD)
         }
       }
@@ -350,7 +350,7 @@
   for (k in seq_len(.ns)) {
     .fSE <- get0(paste0("rx_f_", .st[k], "_"), envir = .model, inherits = FALSE)
     for (p in seq_len(.np)) {
-      .expr <- if (is.null(.fSE)) "0" else { .d <- symengine::D(.fSE, calcSens[p]); rxode2::rxFromSE(.d) }
+      .expr <- if (is.null(.fSE)) "0" else { .d <- symengine::D(.fSE, .rxSEsym(calcSens[p])); rxode2::rxFromSE(.d) }
       .dfLines <- c(.dfLines, sprintf("rx__adjdF_%d_%d__=%s", k - 1L, p - 1L, .expr))
     }
   }
@@ -363,7 +363,7 @@
     for (k in seq_len(.ns)) {
       .lSE <- get0(paste0("rx_lag_", .st[k], "_"), envir = .model, inherits = FALSE)
       for (p in seq_len(.np)) {
-        .expr <- if (is.null(.lSE)) "0" else { .d <- symengine::D(.lSE, calcSens[p]); rxode2::rxFromSE(.d) }
+        .expr <- if (is.null(.lSE)) "0" else { .d <- symengine::D(.lSE, .rxSEsym(calcSens[p])); rxode2::rxFromSE(.d) }
         .dlagLines <- c(.dlagLines, sprintf("rx__adjDlag_%d_%d__=%s", k - 1L, p - 1L, .expr))
       }
     }
@@ -382,9 +382,9 @@
       .dSE <- get0(paste0("rx_dur_", .st[k], "_"), envir = .model, inherits = FALSE)
       for (p in seq_len(.np)) {
         .expr <- if (!is.null(.rSE)) {              # rate(): d(rate)/dtheta
-          .d <- symengine::D(.rSE, calcSens[p]); rxode2::rxFromSE(.d)
+          .d <- symengine::D(.rSE, .rxSEsym(calcSens[p])); rxode2::rxFromSE(.d)
         } else if (!is.null(.dSE)) {                # dur(): d(1/dur)/dtheta = -dur'/dur^2
-          .d <- -symengine::D(.dSE, calcSens[p]) / (.dSE * .dSE); rxode2::rxFromSE(.d)
+          .d <- -symengine::D(.dSE, .rxSEsym(calcSens[p])) / (.dSE * .dSE); rxode2::rxFromSE(.d)
         } else "0"
         .drateLines <- c(.drateLines, sprintf("rx__adjDrate_%d_%d__=%s", k - 1L, p - 1L, .expr))
       }
@@ -398,11 +398,11 @@
     for (i in seq_len(.ns)) for (j in seq_len(.ns)) {
       .dfx <- get0(paste0("rx__df_", .st[i], "_dy_", .st[j], "__"), envir = .model, inherits = FALSE)
       for (p in seq_len(.np)) {
-        .expr <- if (is.null(.dfx)) "0" else { .d <- symengine::D(.dfx, calcSens[p]); rxode2::rxFromSE(.d) }
+        .expr <- if (is.null(.dfx)) "0" else { .d <- symengine::D(.dfx, .rxSEsym(calcSens[p])); rxode2::rxFromSE(.d) }
         .jpLines <- c(.jpLines, sprintf("rx__adjJp_%d_%d_%d__=%s", i - 1L, j - 1L, p - 1L, .expr))
       }
       for (m in seq_len(.ns)) {
-        .expr <- if (is.null(.dfx)) "0" else { .d <- symengine::D(.dfx, .st[m]); rxode2::rxFromSE(.d) }
+        .expr <- if (is.null(.dfx)) "0" else { .d <- symengine::D(.dfx, .rxSEsym(.st[m])); rxode2::rxFromSE(.d) }
         .jyLines <- c(.jyLines, sprintf("rx__adjJy_%d_%d_%d__=%s", i - 1L, j - 1L, m - 1L, .expr))
       }
     }
