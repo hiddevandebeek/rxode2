@@ -71,6 +71,15 @@
 
 ### Simulation
 
+- A chunked solve (`rxSolve(file=, chunkSize=)`) with a `sigma` now
+  reproduces the unchunked solve.  `rxSimThetaOmega()` draws study by study,
+  and inside one study it draws that study's etas and THEN that study's
+  residuals, so a pre-draw that left the sigma out was a study short of the
+  unchunked stream from study 2 onward -- every eta after study 1 was a
+  different (still valid) draw -- and the residuals themselves were redrawn
+  per chunk on top of that.  The parent now draws the residuals for the whole
+  solve and hands each chunk the slice its subjects own (#1339).
+
 - A homogeneous event table (subjects that share one regimen, kept as a
   single representative record set) now draws its own residuals for every
   subject.  The residual matrix was sized from the un-expanded record count,
