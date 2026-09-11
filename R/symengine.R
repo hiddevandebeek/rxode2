@@ -3450,6 +3450,19 @@ local({
   name
 }
 
+#' The one reserved name that cannot be unshadowed
+#'
+#' `E` is the symengine spelling of the model language's `M_E` (`.rxSEcnt`), so
+#' the environment's `E` has to keep meaning Euler's number: a model may use
+#' `M_E` and a variable called `E` in the same expression.  A model variable
+#' named `E` is still correct throughout -- it lives at `rx_SymPy_Res_E` and
+#' `rxFromSE()` maps it back -- but code differentiating by it must ask for
+#' `.rxSEres("E")` rather than reading the plain name.  No other `M_` constant
+#' translates to a reserved name, so no other name has this conflict.
+#'
+#' @noRd
+.rxSEnoUnshadow <- "E"
+
 #' Assign a symengine variable, unshadowing a constant of the same name
 #'
 #' [rxS()] binds symengine's constants (`e`, `E`, `I`, `Catalan`,
@@ -3460,6 +3473,7 @@ local({
 #' goes through here so the plain name always points at the same value -- doing
 #' it once after the model loads instead would leave the plain name stale as
 #' soon as the environment was extended with another [rxToSE()] call.
+#' `.rxSEnoUnshadow` is left alone.
 #'
 #' @param var symengine-side variable name
 #' @param value value to store
@@ -3471,7 +3485,7 @@ local({
   assign(var, value, envir = envir)
   if (substr(var, 1L, 13L) == "rx_SymPy_Res_") {
     .plain <- substring(var, 14L)
-    if (any(.plain == names(.rxSEreserved))) {
+    if (any(.plain == names(.rxSEreserved)) && !any(.plain == .rxSEnoUnshadow)) {
       assign(.plain, value, envir = envir)
     }
   }

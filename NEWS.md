@@ -88,7 +88,7 @@
 
 ### Estimation / symengine translation
 
-- A model variable named after one of symengine's constants (`e`, `E`, `I`,
+- A model variable named after one of symengine's constants (`e`, `I`,
   `Catalan`, `GoldenRatio` or `EulerGamma`) is no longer shadowed by that
   constant in the symbolic layer.  `rxS()` bound the constants into the model
   environment, so reading the name back gave the constant rather than the
@@ -98,7 +98,10 @@
   the model-side name straight to symengine, which for the event-sensitivity
   code silently dropped the term instead of erroring.  A `matExp()`/`indLin()`
   model likewise emitted `k_p_q=exp(1)` for a rate constant that was the
-  parameter `e` (#1359).
+  parameter `e`, and `lag(e, 1)` lagged Euler's number (#1359).  `E` is the
+  one exception: it is the symengine spelling of the model language's `M_E`,
+  so the environment's `E` still means Euler's number and a model variable of
+  that name is reached through its internal name instead.
 
 ### Event translation
 
