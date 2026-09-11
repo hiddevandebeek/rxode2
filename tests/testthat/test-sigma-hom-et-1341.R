@@ -49,6 +49,51 @@ rxTest({
     expect_equal(length(unique(.b$y - .b$cp)), nrow(.b))
   })
 
+  # `curObs` -- the number of rows drawn -- comes from a different count for
+  # each `addDosing`: `nobs2` (evid=0 only), `nobs` (observations, so evid=2
+  # too) and `nall` (every record).  All three have to be expanded.
+  test_that("every addDosing branch draws one sigma per output row (#1341)", {
+    .ev <- et(amt = 320) %>% et(.t1341) %>% et(time = 2, evid = 2) %>% et(id = 1:4)
+    for (.ad in list(NULL, FALSE, TRUE, NA)) {
+      .b <- withr::with_seed(7, {
+        suppressWarnings(as.data.frame(rxSolve(.m1341, .ev, .p1341, sigma = .s1341,
+                                               addDosing = .ad)))
+      })
+      expect_equal(length(unique(.b$y - .b$cp)), nrow(.b),
+                   label = paste0("addDosing=", if (is.null(.ad)) "NULL" else .ad))
+    }
+  })
+
+  test_that("sigma expansion covers addl and steady-state doses (#1341)", {
+    .addl <- et(time = 0, amt = 320, addl = 2, ii = 12) %>% et(.t1341) %>% et(id = 1:3)
+    .b <- withr::with_seed(2, {
+      suppressWarnings(as.data.frame(rxSolve(.m1341, .addl, .p1341, sigma = .s1341,
+                                             addDosing = TRUE)))
+    })
+    expect_equal(length(unique(.b$y - .b$cp)), nrow(.b))
+
+    .ss <- et(time = 0, amt = 320, ii = 12, ss = 1) %>% et(.t1341) %>% et(id = 1:3)
+    .b <- withr::with_seed(3, {
+      suppressWarnings(as.data.frame(rxSolve(.m1341, .ss, .p1341, sigma = .s1341,
+                                             addDosing = FALSE)))
+    })
+    expect_equal(length(unique(.b$y - .b$cp)), nrow(.b))
+  })
+
+  test_that("sigma expansion discounts the evid=9 ini records (#1341)", {
+    # no record at time 0, so etTrans adds one evid=9 ini record per subject;
+    # those never take a residual draw and must not inflate the count
+    .ev <- et(c(1, 2, 4, 8)) %>% et(id = 1:4)
+    for (.ad in list(FALSE, TRUE)) {
+      .b <- withr::with_seed(6, {
+        suppressWarnings(as.data.frame(rxSolve(.m1341, .ev, .p1341, sigma = .s1341,
+                                               addDosing = .ad)))
+      })
+      expect_equal(length(unique(.b$y - .b$cp)), nrow(.b),
+                   label = paste0("addDosing=", .ad))
+    }
+  })
+
   test_that("a non-homogeneous multi-subject data set still draws one sigma per row (#1341)", {
     .ev <- rbind(data.frame(id = 1, time = c(0, 1, 2, 3), amt = c(320, NA, NA, NA),
                             evid = c(1, 0, 0, 0)),
