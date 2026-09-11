@@ -118,6 +118,61 @@ rxTest({
     expect_true(any(grepl("lag(e,1)", .s$..lhs, fixed = TRUE)))
   })
 
+  test_that("the unshadowed name follows a later rxToSE() into the same env", {
+    # doing the unshadowing once after rxS() loads the model would leave the
+    # plain name stale as soon as the environment was extended
+    .s <- rxS(rxModelVars("e=1;\nd/dt(center)=-e*center;\n"))
+    expect_equal(as.character(.s$e), "1")
+    invisible(rxToSE("e=2", envir = .s))
+    expect_equal(as.character(.s$e), "2")
+    expect_equal(as.character(.s$rx_SymPy_Res_e), "2")
+  })
+
+  test_that("adjoint sensitivities accept a parameter named like a constant", {
+    .m <- rxS(rxGetModel("d/dt(depot)=-ka*depot;\nd/dt(center)=ka*depot-(e/v)*center;\n"),
+              TRUE, promoteLinSens = FALSE)
+    .v <- c("ka", "e", "v")
+    invisible(.rxJacobian(.m, c(rxStateOde(.m), .v)))
+    .adj <- .rxAdjoint(.m, .v, "center")
+    expect_true(any(grepl("d/dt(rx__sens_center_BY_e__)=rx__adjLambda_center_center__*center/v",
+                          .adj, fixed = TRUE)))
+    expect_false(any(grepl("rx_SymPy_Res_", .adj, fixed = TRUE)))
+    expect_false(any(grepl("2.718", .adj, fixed = TRUE)))
+  })
+
+  test_that("delay() terms resolve against a parameter named like a constant", {
+    .m <- .rxode2({
+      d/dt(cen) <- -e * cen + 0.1 * delay(cen, tau)
+      tau <- 1.5
+    })
+    .t <- .rxDelayTerms(.m)
+    expect_equal(.t$state, "cen")
+    expect_equal(.t$tau, "tau")
+    .s <- rxS(.m)
+    .b <- .s$..ddt
+    expect_equal(.b, "d/dt(cen)=-cen*e+0.1*delay(cen, 1.5)")
+  })
+
+  test_that("mu-referencing keeps a covariate parameter named like a constant", {
+    .f <- function() {
+      ini({
+        tcl <- 1
+        e <- 0.5
+        add.sd <- 0.7
+        eta.cl ~ 0.1
+      })
+      model({
+        cl <- exp(tcl + e * WT + eta.cl)
+        d/dt(center) <- -cl * center
+        cp <- center
+        cp ~ add(add.sd)
+      })
+    }
+    .d <- .f()$muRefCovariateDataFrame
+    expect_equal(.d$covariateParameter, "e")
+    expect_equal(.d$covariate, "WT")
+  })
+
   test_that(".rxSEres() mangles only the reserved names", {
     expect_equal(.rxSEres(c("e", "cl", "I", "eta.cl")),
                  c("rx_SymPy_Res_e", "cl", "rx_SymPy_Res_I", "eta.cl"))
