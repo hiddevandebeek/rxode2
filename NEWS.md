@@ -82,13 +82,6 @@
   therefore holds one residual per observation, per study, for the whole
   solve.
 
-- A homogeneous event table (subjects that share one regimen, kept as a
-  single representative record set) now draws its own residuals for every
-  subject.  The residual matrix was sized from the un-expanded record count,
-  so it held one group's worth of draws rather than the whole solve's: every
-  subject past that point reused the last drawn row, and with `nStud > 1`
-  whole studies came back with one repeated residual.
-
 ### Model piping
 
 - Model piping no longer promotes a reserved rxode2 variable to a population

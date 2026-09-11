@@ -4017,26 +4017,6 @@ static inline void rxSolve_simulate(const RObject &obj,
           for (R_xlen_t _hg = 0; _hg < hgl.size(); ++_hg) {
             nSub0 += (R_xlen_t)Rf_length(hgl[_hg]);
           }
-          // A homogeneous event table carries ONE representative record set per
-          // group and expands it to every id in that group at solve time, so the
-          // raw record counts above are a group's worth, not a solve's worth.
-          // `curObs` below sizes the residual draw, and the draw is consumed one
-          // row per EXPANDED subject -- left unweighted the matrix came up short
-          // and every subject past the first group's worth reused the last row.
-          rx->nall = 0;
-          rx->nobs = 0;
-          rx->nobs2 = 0;
-          evid9 = 0;
-          for (unsigned int j = (unsigned int)evid.size(); j--;) {
-            int gi = id[j] - 1;
-            int mult = (gi >= 0 && gi < hgl.size()) ?
-              (int)Rf_length(hgl[gi]) : 1;
-            rx->nall += mult;
-            if (isObs(evid[j])) rx->nobs += mult;
-            if (evid[j] == 0) rx->nobs2 += mult;
-            if (evid[j] == 9) evid9 += mult;
-          }
-          rx->nevid9 = evid9;
         }
       } else {
         nSub0 =1;
