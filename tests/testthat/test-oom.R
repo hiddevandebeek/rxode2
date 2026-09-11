@@ -941,6 +941,29 @@ rxTest({
       "no sampling times of its own")
   })
 
+  test_that("the chunked residual count expands a homogeneous event table", {
+    skip_on_cran()
+
+    ## the count that sizes the residual draw has to be one entry per SOLVED
+    ## subject, not per translated record set -- a homogeneous event table
+    ## keeps one representative per group of identical subjects, and a count
+    ## taken from that would be zero for every subject but the first of each
+    ## group, which slices an empty residual matrix for their chunks
+    .m <- rxode2({
+      ka <- exp(tka + eta.ka)
+      cl <- exp(tcl + eta.cl)
+      v <- exp(tv)
+      cp <- linCmt()
+      cp2 <- cp * (1 + prop.err)
+    })
+    .ev <- et(et(amt=100, id=1:6), seq(0, 24, by=8))
+
+    expect_equal(.rxOomObsPerSubject(.m, as.data.frame(.ev), rxControl(), 1:6),
+                 rep(4L, 6))
+    ## and the same when the event table itself is handed over
+    expect_equal(.rxOomObsPerSubject(.m, .ev, rxControl(), 1:6), rep(4L, 6))
+  })
+
   test_that("a parallel chunked solve reproduces the unchunked solve with a sigma", {
     skip_on_cran()
     skip_if_not_installed("mirai")
