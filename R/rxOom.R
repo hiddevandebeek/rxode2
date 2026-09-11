@@ -352,20 +352,25 @@ rxMemSummary.rxEtFile <- function(x, ...) {
       error=function(e) NULL)
     # An event table with no observations at all is one `rxSolve()` adds its
     # own sampling times to (`from`/`to`/`by`/`length.out`), so the count here
-    # is not the count the solve uses; leave that case alone.  Say so rather
-    # than leave it to be discovered: not reproducing the unchunked draw is
-    # exactly what a user asking for a chunked solve would not expect.
-    if (is.null(.obsPerSub) || sum(.obsPerSub) == 0L) {
+    # is not the count the solve uses; leave that case alone, as well as one
+    # too large for the drawn matrix to be indexed.  Say so rather than leave
+    # it to be discovered: not reproducing the unchunked draw is exactly what
+    # a user asking for a chunked solve would not expect.
+    .nObs <- if (is.null(.obsPerSub)) 0 else sum(as.double(.obsPerSub))
+    if (.nObs <= 0 || .nObs * .nStud > .Machine$integer.max) {
+      .why <- if (.nObs <= 0) {
+        "this event table has no sampling times of its own"
+      } else {
+        "this solve has more observations than one drawn matrix can index"
+      }
+      .nObs     <- 0L
       .simSigma <- FALSE
-      warning("a chunked solve could not work out how many residuals this ",
-              "event table needs, so each chunk draws its own: the result is ",
-              "a valid simulation but not the same draw as the unchunked ",
-              "solve.  Give the event table its own sampling times rather ",
-              "than relying on 'from'/'to'/'by'.",
+      warning("a chunked solve is drawing the residuals per chunk because ",
+              .why, ": the result is a valid simulation but not the same ",
+              "draw as the unchunked solve.",
               call.=FALSE)
     } else {
-      .obsStart <- c(0L, cumsum(.obsPerSub))
-      .nObs     <- as.integer(.obsStart[length(.obsStart)])
+      .obsStart <- cumsum(c(0, as.double(.obsPerSub)))
     }
   }
   if (!is.null(.ctl$omega) || !is.null(.ctl$thetaMat) || .simSigma) {
@@ -420,7 +425,7 @@ rxMemSummary.rxEtFile <- function(x, ...) {
       sigmaIsChol     = if (!is.null(.ctl$sigmaIsChol)) .ctl$sigmaIsChol else FALSE,
       sigmaSeparation = if (!is.null(.ctl$sigmaSeparation)) .ctl$sigmaSeparation else "auto",
       sigmaXform      = if (!is.null(.ctl$sigmaXform))  .ctl$sigmaXform  else 1L,
-      nObs            = if (.nObs > 0L) .nObs else 1L,
+      nObs            = if (.nObs > 0) as.integer(.nObs) else 1L,
       dfObs           = if (!is.null(.ctl$dfObs)) .ctl$dfObs else 0,
       # `simSubjects` is `TRUE` only where the event table holds a single
       # subject that `nSub` replicates, which is the one shape a chunked solve
@@ -448,7 +453,7 @@ rxMemSummary.rxEtFile <- function(x, ...) {
       # with a single residual record has nothing to hand on; leave `sigma`
       # forwarded there and let the chunk draw it.
       if (is.null(.preDrawnSigma) ||
-            nrow(.preDrawnSigma) != as.double(.nObs) * .nStud) {
+            nrow(.preDrawnSigma) != .nObs * .nStud) {
         .preDrawnSigma <- NULL
       } else {
         # Strip sigma from forwarded args -- each chunk is handed its slice of

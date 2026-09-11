@@ -931,7 +931,7 @@ rxTest({
     expect_warning(
       rxSolve(.m, .ev, params=.p, omega=.om, sigma=.sg, nStud=3, dfSub=10,
               file=tempfile(fileext=".parquet"), chunkSize=2),
-      "not the same draw")
+      "no sampling times of its own")
   })
 
   test_that("a parallel chunked solve reproduces the unchunked solve with a sigma", {
