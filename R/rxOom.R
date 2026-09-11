@@ -275,7 +275,7 @@ rxMemSummary.rxEtFile <- function(x, ...) {
     .lo <- .obsStart[.first] + 1L
     .hi <- .obsStart[.first + .n]
     if (.hi < .lo) return(integer(0))
-    as.integer(vapply(seq_len(.nStud) - 1L,
+    as.integer(vapply(as.double(seq_len(.nStud) - 1L),
                       function(.s) .s * .nObs + seq.int(.lo, .hi),
                       double(.hi - .lo + 1L)))
   }
@@ -448,7 +448,7 @@ rxMemSummary.rxEtFile <- function(x, ...) {
       # with a single residual record has nothing to hand on; leave `sigma`
       # forwarded there and let the chunk draw it.
       if (is.null(.preDrawnSigma) ||
-            nrow(.preDrawnSigma) != .nObs * .nStud) {
+            nrow(.preDrawnSigma) != as.double(.nObs) * .nStud) {
         .preDrawnSigma <- NULL
       } else {
         # Strip sigma from forwarded args -- each chunk is handed its slice of
