@@ -150,7 +150,7 @@ rxMemSummary.rxEtFile <- function(x, ...) {
   } else {
     (.evid == 0L | .evid == 2L | (.evid >= 9L & .evid <= 99L)) & .evid != 9L
   }
-  .n <- vapply(seq_along(.lvl), function(.i) sum(.keep & .id == .i), integer(1))
+  .n <- tabulate(.id[.keep], nbins=length(.lvl))
   .n <- .n[match(as.character(.ids), as.character(.lvl))]
   if (anyNA(.n)) NULL else .n
 }
