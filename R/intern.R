@@ -29,18 +29,16 @@
 #' @author Matthew L. Fidler
 #' @noRd
 .rxIsReservedName <- function(x) {
+  # nolint next: object_usage_linter. registered in src/init.c
   .Call(`_rxode2_rxIsReservedName`, as.character(x))
 }
 
 #' Is this a name model piping must never turn into an estimated parameter?
 #'
-#' The parser's reserved names, plus `E`: not reserved by the parser, but
-#' symengine's Euler constant (`.rxSEreserved`), so an `ini({})` entry of that
-#' name reads back as 2.718 in the estimation models and does nothing.  The
-#' rest of `.rxSEreserved` (`e`, `I`, ...) shadows a parameter the same way,
-#' but those names are accepted parameter names today, and a hand-written
-#' `ini({})` is shadowed just the same, so blocking them only here would not
-#' fix it; see issue #1359.
+#' The parser's reserved names, plus `E` -- not reserved by the parser, but kept
+#' out of the ini block since before `.rxSEreserved` stopped shadowing a model
+#' variable of that name (#1359).  The rest of `.rxSEreserved` (`e`, `I`, ...)
+#' are ordinary parameter names.
 #'
 #' @param x character vector of names to test
 #' @return logical vector the same length as `x`

@@ -86,6 +86,25 @@
   silently ignored the renamed parameter, since the name reads back as the
   constant.
 
+### Estimation / symengine translation
+
+- A model variable named after one of symengine's constants (`e`, `I`,
+  `Catalan`, `GoldenRatio` or `EulerGamma`) is no longer shadowed by that
+  constant in the symbolic layer.  `rxS()` bound the constants into the model
+  environment, so reading the name back gave the constant rather than the
+  model variable and differentiating by it failed with "Input is not a
+  SYMBOL"; the remaining `symengine::D()` call sites in the Jacobian, adjoint,
+  delay-differential, event-sensitivity and mu-referencing code also passed
+  the model-side name straight to symengine, which for the event-sensitivity
+  code silently dropped the term instead of erroring.  A `matExp()`/`indLin()`
+  model likewise emitted `k_p_q=exp(1)` for a rate constant that was the
+  parameter `e`, `lag(e, 1)` lagged Euler's number, and a delay whose duration
+  depended on `e` lost its breaking-point correction terms and then computed
+  its jump amplitude from `M_E` (#1359).  `E` is the one exception: it is the
+  symengine spelling of the model language's `M_E`, so the environment's `E`
+  still means Euler's number and a model variable of that name is reached
+  through its internal name instead.
+
 ### Event translation
 
 - A steady-state dose into a compartment with a modeled `alag()` pushed
