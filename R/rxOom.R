@@ -456,6 +456,12 @@ rxMemSummary.rxEtFile <- function(x, ...) {
             nrow(.preDrawnSigma) != .nObs * .nStud) {
         .preDrawnSigma <- NULL
       } else {
+        # A chunk's slice is left in `.rxModels` for `rxSolve()` to pick up,
+        # and `rxSolve()` is what removes it again -- so a chunk that errors
+        # leaves one behind, where a later solve of a model with the same eps
+        # would silently read it as its own residuals.  Clear it on the way
+        # out however this call ends.
+        on.exit(.rxOomClearDrawn(".sigma"), add=TRUE)
         # Strip sigma from forwarded args -- each chunk is handed its slice of
         # the drawn residuals instead, and a forwarded sigma would have it draw
         # its own on top of them.  The zero placeholder columns the residuals
@@ -590,6 +596,15 @@ rxMemSummary.rxEtFile <- function(x, ...) {
         # the daemon drawing its own.
         if (!is.null(.chunkSigmaList[[.i]])) {
           assign(".sigma", .chunkSigmaList[[.i]], envir = rxModels_())
+          # a daemon outlives one chunk, and `rxSolve()` is what removes this
+          # again -- so a chunk that errors would leave its residuals for the
+          # next chunk scheduled here
+          on.exit({
+            .me <- rxModels_()
+            if (exists(".sigma", envir = .me, inherits = FALSE)) {
+              rm(list = ".sigma", envir = .me)
+            }
+          }, add = TRUE)
         }
         # A daemon is a separate R process that loads its OWN rxode2, which need
         # not be the build the parent is running: a source checkout under

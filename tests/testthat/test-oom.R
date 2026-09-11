@@ -907,6 +907,8 @@ rxTest({
     .cmp(.addl, nStud=3, dfSub=10)
     .cmp(.addl, nStud=3, dfSub=10, addDosing=TRUE)
     .cmp(.addl, nStud=3, dfSub=10, addDosing=NA)
+    .cmp(.addl, nStud=3, dfSub=10, addDosing=NULL)
+    .cmp(.addl, nStud=3, dfSub=10, addDosing=FALSE)
   })
 
   test_that("a chunked solve says so when it cannot share the residual draw", {
