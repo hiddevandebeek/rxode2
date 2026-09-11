@@ -3422,6 +3422,61 @@ local({
   .f
 }
 
+#' The symengine name a model variable is bound under
+#'
+#' A model variable called `e`, `E`, `I`, `Catalan`, `GoldenRatio` or
+#' `EulerGamma` is bound under `rx_SymPy_Res_<name>` because symengine reads the
+#' plain name as the matching constant (`.rxSEreserved`); everything else keeps
+#' its name.  Mirrors `symengineRes()` (`src/expm.cpp`).
+#'
+#' @param name character vector of model variable names
+#' @return character vector of symengine names
+#' @author Matthew L. Fidler
+#' @noRd
+.rxSEres <- function(name) {
+  .w <- name %in% names(.rxSEreserved)
+  if (any(.w)) name[.w] <- paste0("rx_SymPy_Res_", name[.w])
+  name
+}
+
+#' The symengine `Symbol` to differentiate by for a model variable
+#'
+#' `symengine::S()` re-parses, so it reads a model variable called `e`, `I`,
+#' `Catalan`, ... as the matching constant and `D()` then fails with "Input is
+#' not a SYMBOL" (#1359); it also rejects a dotted rxode2 name (`eta.cl`).
+#' `Symbol()` on the `rx_SymPy_Res_*` name avoids both.
+#'
+#' @param name model variable name (length one)
+#' @return symengine `Symbol`
+#' @author Matthew L. Fidler
+#' @noRd
+.rxSEsym <- function(name) {
+  symengine::Symbol(.rxSEres(name))
+}
+
+#' Stop symengine's constants from shadowing model variables of the same name
+#'
+#' [rxS()] binds symengine's constants (`e`, `E`, `I`, `Catalan`,
+#' `GoldenRatio`, `EulerGamma`; `.rxSEreserved`) into the model environment,
+#' while [rxToSE()] renames a model variable of one of those names to
+#' `rx_SymPy_Res_<name>`.  Reading the plain name back therefore gave the
+#' constant and `D(expr, name)` errored (#1359).  Point the plain name at
+#' whatever the mangled name holds.
+#'
+#' @param env symengine environment built by [rxS()]
+#' @return `env`, invisibly (modified by reference)
+#' @author Matthew L. Fidler
+#' @noRd
+.rxSEunshadowConstants <- function(env) {
+  for (.v in names(.rxSEreserved)) {
+    .val <- get0(paste0("rx_SymPy_Res_", .v), envir = env, inherits = FALSE)
+    if (!is.null(.val)) {
+      assign(.v, .val, envir = env)
+    }
+  }
+  invisible(env)
+}
+
 #' Load a model into a symengine environment
 #'
 #' @param x rxode2 object
@@ -3507,6 +3562,9 @@ rxS <- function(x, doConst = TRUE, promoteLinSens = FALSE, envir=parent.frame())
     if (any(.cnst == x)) {
       .tmp <- paste0("rx_SymPy_Res_", x)
       assign(.tmp, symengine::Symbol(.tmp), envir = .env)
+      # the model declares a variable of this name, so the constant binding
+      # above must not shadow it (#1359)
+      assign(x, symengine::Symbol(.tmp), envir = .env)
     } else {
       .tmp <- rxToSE(x, envir=.env)
       assign(.tmp, symengine::Symbol(.tmp), envir = .env)
@@ -3521,6 +3579,7 @@ rxS <- function(x, doConst = TRUE, promoteLinSens = FALSE, envir=parent.frame())
   .env$..laggedVars <- .rxCollectLaggedVars(.expr)
   # loads the model into .env by side effect; the returned text is not used
   .rxToSE(.expr, envir=.env)
+  .rxSEunshadowConstants(.env)
   class(.env) <- "rxS"
   return(.env)
 }
