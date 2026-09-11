@@ -78,7 +78,9 @@
   unchunked stream from study 2 onward -- every eta after study 1 was a
   different (still valid) draw -- and the residuals themselves were redrawn
   per chunk on top of that.  The parent now draws the residuals for the whole
-  solve and hands each chunk the slice its subjects own (#1339).
+  solve and hands each chunk the slice its subjects own (#1339).  The parent
+  therefore holds one residual per observation, per study, for the whole
+  solve.
 
 - A homogeneous event table (subjects that share one regimen, kept as a
   single representative record set) now draws its own residuals for every

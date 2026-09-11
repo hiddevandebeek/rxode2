@@ -109,15 +109,12 @@ rxMemSummary.rxEtFile <- function(x, ...) {
 # per observation residual matrix `rxSimThetaOmega()` writes into `.rxModels`;
 # `rxSolve()` reads it from there and consumes one row per output record, so
 # assigning the chunk's slice before the solve is what stops the chunk drawing
-# its own.  NULL removes it, which is how a chunk with no residuals is spelled.
+# its own.  `rxSolve()` moves it into the solved object's environment when it
+# is done, so each chunk needs its own assignment.
 .rxOomSetDrawnSigma <- function(x) {
   .e <- .rxModels
   if (!is.environment(.e)) return(invisible())
-  if (is.null(x)) {
-    if (exists(".sigma", envir=.e, inherits=FALSE)) rm(list=".sigma", envir=.e)
-  } else {
-    assign(".sigma", x, envir=.e)
-  }
+  assign(".sigma", x, envir=.e)
   invisible()
 }
 
@@ -154,7 +151,8 @@ rxMemSummary.rxEtFile <- function(x, ...) {
     (.evid == 0L | .evid == 2L | (.evid >= 9L & .evid <= 99L)) & .evid != 9L
   }
   .n <- vapply(seq_along(.lvl), function(.i) sum(.keep & .id == .i), integer(1))
-  .n[match(as.character(.ids), as.character(.lvl))]
+  .n <- .n[match(as.character(.ids), as.character(.lvl))]
+  if (anyNA(.n)) NULL else .n
 }
 
 # -- Main OOM solve loop -------------------------------------------------------
@@ -334,7 +332,31 @@ rxMemSummary.rxEtFile <- function(x, ...) {
   # study 2 onward and every eta after that was a different (still valid)
   # draw.  Drawing it here keeps the stream identical AND gives each chunk its
   # own slice of the one residual matrix, instead of a redraw.
-  .simSigma <- !is.null(.ctl$sigma) && length(.ctl$sigma) > 0L
+  .simSigma <- !is.null(.ctl$sigma) && length(.ctl$sigma) > 0L &&
+    !is.data.frame(params) && !is.matrix(params)
+  if (.simSigma) {
+    # The residual matrix is sized by the number of records the solve reads
+    # residuals for, so the pre-draw has to know that count exactly -- the same
+    # `curObs` `rxSolve()` computes -- or the stream diverges and nothing is
+    # gained.
+    .evDfAll <- if (inherits(events, "rxEtFile")) {
+      .rxEtFileReadFull(events)
+    } else {
+      as.data.frame(events)
+    }
+    # A count that cannot be worked out is not worth failing the solve over:
+    # the chunks then still draw their own residuals, which is what they did
+    # before and is a valid simulation, just not the same draw.
+    .obsPerSub <- tryCatch(
+      .rxOomObsPerSubject(object, .evDfAll, .ctl, .allIds),
+      error=function(e) NULL)
+    if (is.null(.obsPerSub)) {
+      .simSigma <- FALSE
+    } else {
+      .obsStart <- c(0L, cumsum(.obsPerSub))
+      .nObs     <- as.integer(.obsStart[length(.obsStart)])
+    }
+  }
   if (!is.null(.ctl$omega) || !is.null(.ctl$thetaMat) || .simSigma) {
     # The draw is made from a named parameter vector -- that is all
     # `rxSimThetaOmega()` takes, and it is what the chunks are sliced out of.
@@ -343,24 +365,10 @@ rxMemSummary.rxEtFile <- function(x, ...) {
     # `rxSolve()` refuses the `thetaMat` half of this unchunked as well.
     if (is.data.frame(params) || is.matrix(params)) {
       stop("a chunked solve ('file='/'chunkSize=') cannot draw an 'omega'/",
-           "'thetaMat'/'sigma' when the parameters are a 'data.frame'/",
-           "'matrix'; the one draw every chunk shares is made from a named ",
-           "parameter vector.  Solve without chunking.",
+           "'thetaMat' when the parameters are a 'data.frame'/'matrix'; the ",
+           "one draw every chunk shares is made from a named parameter ",
+           "vector.  Solve without chunking.",
            call.=FALSE)
-    }
-    if (.simSigma) {
-      # The residual matrix is sized by the number of records the solve reads
-      # residuals for, so the pre-draw has to know that count exactly -- the
-      # same `curObs` `rxSolve()` computes -- or the stream diverges and
-      # nothing is gained.
-      .evDfAll <- if (inherits(events, "rxEtFile")) {
-        .rxEtFileReadFull(events)
-      } else {
-        as.data.frame(events)
-      }
-      .obsPerSub <- .rxOomObsPerSubject(object, .evDfAll, .ctl, .allIds)
-      .obsStart  <- c(0L, cumsum(.obsPerSub))
-      .nObs      <- as.integer(.obsStart[length(.obsStart)])
     }
     .ncores <- if (!is.null(.ctl$cores) && .ctl$cores > 0L) {
       as.integer(.ctl$cores)
@@ -394,7 +402,7 @@ rxMemSummary.rxEtFile <- function(x, ...) {
       # draw, so it has to be made in this call whether or not its values are
       # used -- leaving it out takes the RNG out of the order the unchunked
       # solve draws in
-      sigma           = .ctl$sigma,
+      sigma           = if (.simSigma) .ctl$sigma else NULL,
       sigmaLower      = if (!is.null(.ctl$sigmaLower))  .ctl$sigmaLower  else -Inf,
       sigmaUpper      = if (!is.null(.ctl$sigmaUpper))  .ctl$sigmaUpper  else  Inf,
       sigmaDf         = .ctl$sigmaDf,
