@@ -73,6 +73,14 @@ rxTest({
     expect_equal(.b$sigmaRows, nrow(.b$df))
   })
 
+  test_that("the expansion holds across studies as well (#1341)", {
+    .b <- .solve1341(et(amt = 320) |> et(.t1341) |> et(id = 1:4),
+                     seed = 9, nStud = 3, addDosing = FALSE)
+    expect_equal(nrow(.b$df), 3L * 4L * length(.t1341))
+    expect_equal(.b$sigmaRows, nrow(.b$df))
+    expect_equal(length(unique(.b$df$y - .b$df$cp)), nrow(.b$df))
+  })
+
   test_that("omega is drawn per subject from et(id=) as well (#1341)", {
     # omega was never part of the bug; pin that, so a later change to the
     # expanded counts cannot quietly take the between-subject draws with it
