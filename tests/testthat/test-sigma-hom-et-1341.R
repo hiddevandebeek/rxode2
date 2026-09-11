@@ -11,87 +11,66 @@ rxTest({
   .s1341 <- lotri(err ~ 0.25)
   .t1341 <- c(0.25, 1, 4, 12, 24)
 
-  test_that("sigma is simulated for every subject that comes from et(id=) (#1341)", {
-    .ev <- et(amt = 320) %>% et(.t1341) %>% et(id = 1:6)
-    .b <- withr::with_seed(1, {
-      suppressWarnings(as.data.frame(rxSolve(.m1341, .ev, .p1341, sigma = .s1341,
-                                             addDosing = FALSE)))
+  # Solve and report both the output and the number of rows actually drawn for
+  # the residual.  The drawn matrix is checked directly because the solve reads
+  # it with an index clamped at the last row: too few rows repeat silently, and
+  # too many are silently ignored, so the simulated values alone cannot see
+  # either.
+  .solve1341 <- function(ev, seed = 1, ...) {
+    .r <- withr::with_seed(seed, {
+      suppressWarnings(rxSolve(.m1341, ev, .p1341, sigma = .s1341, ...))
     })
-    expect_equal(nrow(.b), 6L * length(.t1341))
+    list(df = as.data.frame(.r),
+         sigmaRows = nrow(attr(class(.r), ".rxode2.env")$.sigma))
+  }
+
+  test_that("sigma is simulated for every subject that comes from et(id=) (#1341)", {
+    .b <- .solve1341(et(amt = 320) %>% et(.t1341) %>% et(id = 1:6),
+                     addDosing = FALSE)
+    expect_equal(nrow(.b$df), 6L * length(.t1341))
     # one draw per observation row, not one subject's worth recycled
-    expect_equal(length(unique(.b$y - .b$cp)), nrow(.b))
+    expect_equal(length(unique(.b$df$y - .b$df$cp)), nrow(.b$df))
+    expect_equal(.b$sigmaRows, nrow(.b$df))
 
     # ... and it matches the nSub= path exactly
-    .a <- withr::with_seed(1, {
-      suppressWarnings(as.data.frame(rxSolve(.m1341, et(amt = 320) %>% et(.t1341),
-                                             .p1341, sigma = .s1341, nSub = 6,
-                                             addDosing = FALSE)))
-    })
-    expect_equal(.b$y - .b$cp, .a$y - .a$cp)
+    .a <- .solve1341(et(amt = 320) %>% et(.t1341), nSub = 6, addDosing = FALSE)
+    expect_equal(.b$df$y - .b$df$cp, .a$df$y - .a$df$cp)
+  })
+
+  # The row count `curObs` reads differs per `addDosing` -- `nobs2` (evid=0
+  # only) for NULL, `nobs` (observations, so evid=2 as well) for FALSE and
+  # `nall` (every record) for TRUE/NA -- so all four have to be expanded.  What
+  # the fix guarantees is that n identical subjects draw exactly n times what
+  # one of them draws, which catches an under- and an over-sized draw alike.
+  test_that("every addDosing branch draws n times the single-subject count (#1341)", {
+    .shapes <- list(
+      plain = et(amt = 320) %>% et(.t1341),
+      evid2 = et(amt = 320) %>% et(.t1341) %>% et(time = 2, evid = 2),
+      addl  = et(time = 0, amt = 320, addl = 2, ii = 12) %>% et(.t1341),
+      ss    = et(time = 0, amt = 320, ii = 12, ss = 1) %>% et(.t1341),
+      # no record at time 0, so etTrans adds an evid=9 ini record per subject;
+      # those take no residual draw
+      evid9 = et(c(1, 2, 4, 8))
+    )
+    for (.nm in names(.shapes)) {
+      for (.ad in list(NULL, FALSE, TRUE, NA)) {
+        .lbl <- paste0(.nm, "/addDosing=", if (is.null(.ad)) "NULL" else .ad)
+        .one <- .solve1341(.shapes[[.nm]] %>% et(id = 1L), addDosing = .ad)
+        .many <- .solve1341(.shapes[[.nm]] %>% et(id = 1:4), addDosing = .ad)
+        expect_equal(.many$sigmaRows, 4L * .one$sigmaRows, label = .lbl)
+        expect_equal(nrow(.many$df), 4L * nrow(.one$df), label = .lbl)
+        expect_equal(length(unique(.many$df$y - .many$df$cp)), nrow(.many$df),
+                     label = .lbl)
+      }
+    }
   })
 
   test_that("sigma expands per group when the groups differ (#1341)", {
     .ev <- rbind(et(amt = 320) %>% et(.t1341) %>% et(id = 1:3),
                  et(amt = 100) %>% et(.t1341) %>% et(id = 4:5))
-    .b <- withr::with_seed(4, {
-      suppressWarnings(as.data.frame(rxSolve(.m1341, .ev, .p1341, sigma = .s1341,
-                                             addDosing = FALSE)))
-    })
-    expect_equal(length(unique(.b$y - .b$cp)), nrow(.b))
-  })
-
-  test_that("sigma expansion also covers the dosing rows kept by addDosing (#1341)", {
-    .ev <- et(amt = 320) %>% et(.t1341) %>% et(id = 1:4)
-    .b <- withr::with_seed(5, {
-      suppressWarnings(as.data.frame(rxSolve(.m1341, .ev, .p1341, sigma = .s1341,
-                                             addDosing = TRUE)))
-    })
-    expect_equal(length(unique(.b$y - .b$cp)), nrow(.b))
-  })
-
-  # `curObs` -- the number of rows drawn -- comes from a different count for
-  # each `addDosing`: `nobs2` (evid=0 only), `nobs` (observations, so evid=2
-  # too) and `nall` (every record).  All three have to be expanded.
-  test_that("every addDosing branch draws one sigma per output row (#1341)", {
-    .ev <- et(amt = 320) %>% et(.t1341) %>% et(time = 2, evid = 2) %>% et(id = 1:4)
-    for (.ad in list(NULL, FALSE, TRUE, NA)) {
-      .b <- withr::with_seed(7, {
-        suppressWarnings(as.data.frame(rxSolve(.m1341, .ev, .p1341, sigma = .s1341,
-                                               addDosing = .ad)))
-      })
-      expect_equal(length(unique(.b$y - .b$cp)), nrow(.b),
-                   label = paste0("addDosing=", if (is.null(.ad)) "NULL" else .ad))
-    }
-  })
-
-  test_that("sigma expansion covers addl and steady-state doses (#1341)", {
-    .addl <- et(time = 0, amt = 320, addl = 2, ii = 12) %>% et(.t1341) %>% et(id = 1:3)
-    .b <- withr::with_seed(2, {
-      suppressWarnings(as.data.frame(rxSolve(.m1341, .addl, .p1341, sigma = .s1341,
-                                             addDosing = TRUE)))
-    })
-    expect_equal(length(unique(.b$y - .b$cp)), nrow(.b))
-
-    .ss <- et(time = 0, amt = 320, ii = 12, ss = 1) %>% et(.t1341) %>% et(id = 1:3)
-    .b <- withr::with_seed(3, {
-      suppressWarnings(as.data.frame(rxSolve(.m1341, .ss, .p1341, sigma = .s1341,
-                                             addDosing = FALSE)))
-    })
-    expect_equal(length(unique(.b$y - .b$cp)), nrow(.b))
-  })
-
-  test_that("sigma expansion discounts the evid=9 ini records (#1341)", {
-    # no record at time 0, so etTrans adds one evid=9 ini record per subject;
-    # those never take a residual draw and must not inflate the count
-    .ev <- et(c(1, 2, 4, 8)) %>% et(id = 1:4)
-    for (.ad in list(FALSE, TRUE)) {
-      .b <- withr::with_seed(6, {
-        suppressWarnings(as.data.frame(rxSolve(.m1341, .ev, .p1341, sigma = .s1341,
-                                               addDosing = .ad)))
-      })
-      expect_equal(length(unique(.b$y - .b$cp)), nrow(.b),
-                   label = paste0("addDosing=", .ad))
-    }
+    .b <- .solve1341(.ev, seed = 4, addDosing = FALSE)
+    expect_equal(length(unique(.b$df$y - .b$df$cp)), nrow(.b$df))
+    expect_equal(.b$sigmaRows, nrow(.b$df))
   })
 
   test_that("a non-homogeneous multi-subject data set still draws one sigma per row (#1341)", {
@@ -99,10 +78,8 @@ rxTest({
                             evid = c(1, 0, 0, 0)),
                  data.frame(id = 2, time = c(0, 1, 2, 3, 8), amt = c(100, NA, NA, NA, NA),
                             evid = c(1, 0, 0, 0, 0)))
-    .b <- withr::with_seed(3, {
-      suppressWarnings(as.data.frame(rxSolve(.m1341, .ev, .p1341, sigma = .s1341,
-                                             addDosing = FALSE)))
-    })
-    expect_equal(length(unique(.b$y - .b$cp)), nrow(.b))
+    .b <- .solve1341(.ev, seed = 3, addDosing = FALSE)
+    expect_equal(length(unique(.b$df$y - .b$df$cp)), nrow(.b$df))
+    expect_equal(.b$sigmaRows, nrow(.b$df))
   })
 })
