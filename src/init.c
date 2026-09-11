@@ -370,6 +370,7 @@ void nullGlobals(void);
 SEXP _rxode2_codeLoaded(void);
 SEXP _rxode2_parseModel(SEXP type);
 SEXP _rxode2_isLinCmt(void);
+SEXP _rxode2_rxIsReservedName(SEXP inSEXP);
 SEXP _rxode2_trans(SEXP parse_file, SEXP prefix, SEXP model_md5, SEXP parseStr,
                    SEXP isEscIn, SEXP inME, SEXP goodFuns, SEXP fullPrintIn);
 SEXP _rxode2_rxSetSeed(SEXP);
@@ -968,6 +969,7 @@ void R_init_rxode2(DllInfo *info){
     {"_rxode2_rxToSEChar", (DL_FUNC) &_rxode2_rxToSEChar, 1},
     {"_rxode2_rxCse", (DL_FUNC) &_rxode2_rxCse, 1},
     {"_rxode2_isLinCmt", (DL_FUNC) &_rxode2_isLinCmt, 0},
+    {"_rxode2_rxIsReservedName", (DL_FUNC) &_rxode2_rxIsReservedName, 1},
     {"rxode2_get_mv", (DL_FUNC) &rxode2_get_mv, 0},
     {"_rxode2_rxGetSeed", (DL_FUNC) &_rxode2_rxGetSeed, 0},
     {"_rxode2_setGlobalSeed", (DL_FUNC) &_rxode2_setGlobalSeed, 1},

@@ -69,6 +69,23 @@
   it feeds discarded that row -- so the subject vanished from the solve
   output instead of being rejected.
 
+### Model piping
+
+- Model piping no longer promotes a reserved rxode2 variable to a population
+  parameter.  Appending or prepending a line that used `t`, `time`, `tlast`,
+  `newind`, `rxFlag`, one of the `M_` constants or `pi`/`NA`/`NaN`/`Inf`
+  added it to the `ini({})` block, and the resulting model then failed to
+  parse with "the following parameter(s) were in the ini block but not in the
+  model block".  Reserved names are now retained as-is, and the list comes
+  from the parser itself rather than a second copy in R.
+
+- `rxRename()` now refuses to rename a parameter to a reserved rxode2
+  variable.  `rxRename(t = tcl)`, `rxRename(lhs = tcl)` and
+  `rxRename(cmt = tcl)` produced the same unparseable model, and
+  `rxRename(pi = tcl)` or `rxRename(E = tcl)` produced a model that parsed but
+  silently ignored the renamed parameter, since the name reads back as the
+  constant.
+
 ### Event translation
 
 - A steady-state dose into a compartment with a modeled `alag()` pushed

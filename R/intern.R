@@ -19,6 +19,37 @@
   .Call(`_rxode2_isLinCmt`)
 }
 
+#' Are these names reserved rxode2 variables?
+#'
+#' Wraps the parser's own `isReservedName()` so there is one list of reserved
+#' names; a reserved name is never a model parameter or covariate.
+#'
+#' @param x character vector of names to test
+#' @return logical vector the same length as `x`
+#' @author Matthew L. Fidler
+#' @noRd
+.rxIsReservedName <- function(x) {
+  .Call(`_rxode2_rxIsReservedName`, as.character(x))
+}
+
+#' Is this a name model piping must never turn into an estimated parameter?
+#'
+#' The parser's reserved names, plus `E`: not reserved by the parser, but
+#' symengine's Euler constant (`.rxSEreserved`), so an `ini({})` entry of that
+#' name reads back as 2.718 in the estimation models and does nothing.  The
+#' rest of `.rxSEreserved` (`e`, `I`, ...) shadows a parameter the same way,
+#' but those names are accepted parameter names today, and a hand-written
+#' `ini({})` is shadowed just the same, so blocking them only here would not
+#' fix it; see issue #1359.
+#'
+#' @param x character vector of names to test
+#' @return logical vector the same length as `x`
+#' @author Matthew L. Fidler
+#' @noRd
+.rxIsReservedPipeName <- function(x) {
+  .rxIsReservedName(x) | x == "E"
+}
+
 .trans <- function(parse_file, prefix, model_md5, parseStr, isEscIn, inME, goodFuns, fullPrintIn) {
   .Call(`_rxode2_trans`,
         parse_file, prefix, model_md5, parseStr, isEscIn, inME, goodFuns, fullPrintIn)
