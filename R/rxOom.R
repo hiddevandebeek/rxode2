@@ -392,6 +392,13 @@ rxMemSummary.rxEtFile <- function(x, ...) {
       getRxThreads()
     }
     .rxOomClearDrawn(c(".omegaL", ".sigmaL", ".theta", ".sigma"))
+    # From here on this call may leave a residual matrix in `.rxModels` -- the
+    # pre-draw writes one, and each chunk is handed its slice there -- and it
+    # is `rxSolve()` that takes it out again.  Anything that stops before the
+    # last chunk's solve would leave one behind, where a later solve of a model
+    # with the same eps would read it as its own residuals.  Clear it however
+    # this call ends.
+    on.exit(.rxOomClearDrawn(".sigma"), add=TRUE)
     rxSetSeed(.baseSeed)
     rxSeedEng(.ncores)
     .preDrawnParams <- rxSimThetaOmega(
@@ -456,12 +463,6 @@ rxMemSummary.rxEtFile <- function(x, ...) {
             nrow(.preDrawnSigma) != .nObs * .nStud) {
         .preDrawnSigma <- NULL
       } else {
-        # A chunk's slice is left in `.rxModels` for `rxSolve()` to pick up,
-        # and `rxSolve()` is what removes it again -- so a chunk that errors
-        # leaves one behind, where a later solve of a model with the same eps
-        # would silently read it as its own residuals.  Clear it on the way
-        # out however this call ends.
-        on.exit(.rxOomClearDrawn(".sigma"), add=TRUE)
         # Strip sigma from forwarded args -- each chunk is handed its slice of
         # the drawn residuals instead, and a forwarded sigma would have it draw
         # its own on top of them.  The zero placeholder columns the residuals

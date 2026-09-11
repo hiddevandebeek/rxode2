@@ -872,6 +872,10 @@ rxTest({
       d
     }
 
+    ## `.sigma` is shared mutable state: the chunked solve hands each chunk its
+    ## slice through `.rxModels`, so a leak there would be read by whichever
+    ## solve ran next -- including the one being compared against.  Solve
+    ## unchunked FIRST, and check nothing is left behind.
     .cmp <- function(.ev, ...) {
       .solve <- function(...) {
         withr::with_seed(42, {
@@ -879,9 +883,10 @@ rxTest({
           rxSolve(.m, .ev, params=.p, omega=.om, sigma=.sg, ...)
         })
       }
-      expect_equal(.key(.solve(file=tempfile(fileext=".parquet"), chunkSize=2,
-                               ...)),
-                   .key(.solve(...)))
+      .full  <- .key(.solve(...))
+      .chunk <- .key(.solve(file=tempfile(fileext=".parquet"), chunkSize=2, ...))
+      expect_equal(.chunk, .full)
+      expect_false(exists(".sigma", envir=rxModels_(), inherits=FALSE))
     }
 
     ## a homogeneous event table -- one representative record set expanded to
