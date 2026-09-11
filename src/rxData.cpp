@@ -4013,10 +4013,29 @@ static inline void rxSolve_simulate(const RObject &obj,
         RObject hgs = Rf_getAttrib(ev1, Rf_install("rxHomGroups"));
         if (!Rf_isNull(hgs)) {
           List hgl = as<List>(hgs);
+          int nHg = hgl.size();
           nSub0 = 0;
-          for (R_xlen_t _hg = 0; _hg < hgl.size(); ++_hg) {
-            nSub0 += (R_xlen_t)Rf_length(hgl[_hg]);
+          for (int _hg = 0; _hg < nHg; ++_hg) {
+            nSub0 += Rf_length(hgl[_hg]);
           }
+          // A homogeneous table stores ONE representative subject per group and
+          // the real ids in `rxHomGroups`, so the raw row counts above are one
+          // group's worth.  Expand them the way the setup pass below does; the
+          // residual (`sigma`) draw is sized from these, and an unexpanded count
+          // simulates the residual for the first subject only.
+          rx->nall = 0;
+          rx->nobs = 0;
+          rx->nobs2 = 0;
+          evid9 = 0;
+          for (int _j = 0; _j < evid.size(); ++_j) {
+            int _gi = id[_j] - 1;
+            int _mult = (_gi >= 0 && _gi < nHg) ? Rf_length(hgl[_gi]) : 1;
+            rx->nall += _mult;
+            if (isObs(evid[_j])) rx->nobs += _mult;
+            if (evid[_j] == 0) rx->nobs2 += _mult;
+            if (evid[_j] == 9) evid9 += _mult;
+          }
+          rx->nevid9 = evid9;
         }
       } else {
         nSub0 =1;
