@@ -3890,8 +3890,6 @@ static inline void rxSolve_ev1Update(const RObject &obj,
   _rxModels[".lastEv1"] = ev1;
 }
 
-// This function simulates individual parameter values and residual
-// parameter values and then converts them to a data.frame.  This
 // A homogeneous event table stores ONE representative subject per group and
 // the real ids in `rxHomGroups`, so its raw row counts are one group's worth.
 // Expand every count by the group sizes, the way `rxSolve_datSetupHmax()`
@@ -3961,6 +3959,8 @@ static inline unsigned int rxSolve_countEvents(const RObject &ev1, rx_solve *rx)
   return nSub0;
 }
 
+// This function simulates individual parameter values and residual
+// parameter values and then converts them to a data.frame.  This
 // allows rxSolve_ to solve as if the user specified these parameters
 // directly
 static inline void rxSolve_simulate(const RObject &obj,
