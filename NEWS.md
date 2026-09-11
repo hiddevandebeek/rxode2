@@ -156,6 +156,18 @@
   between occasions of one parameter rather than between the parameters
   of one occasion (#1345).
 
+### Simulation
+
+- Residual error (`sigma`) is now simulated for every subject when the
+  subjects come from the event table's `id` column (`et(id = )`) rather
+  than from `nSub=`.  Identical subjects are translated once and shared,
+  so the residual draw was sized from that one representative: subject 1
+  got the only draws and every other observation reused the last of them,
+  making the simulated residual nearly constant and any prediction
+  interval built from it far too narrow.  The counts that size the draw
+  are now expanded by the shared group the way the rest of the solve setup
+  expands them.  `omega` was never affected (#1341).
+
 ## New features
 
 - Correlated inter-occasion variability is now supported.  A `| occ`
