@@ -24,7 +24,7 @@ rxTest({
                             "d/dt(center)=ka*depot-cl*center;\n"), v),
              calcSens = TRUE)
     }
-    .ev <- et(amt = 100) %>% et(seq(0, 24, by = 2))
+    .ev <- et(amt = 100) |> et(seq(0, 24, by = 2))
     .a <- rxSolve(.mk("e"), .ev, params = c(tka = 0.4, tcl = -0.1, e = 0.2),
                   returnType = "data.frame", atol = 1e-11, rtol = 1e-11)
     .b <- rxSolve(.mk("ee"), .ev, params = c(tka = 0.4, tcl = -0.1, ee = 0.2),
@@ -42,7 +42,7 @@ rxTest({
                      "d/dt(depot)=-ka*depot;\n",
                      "d/dt(center)=ka*depot-cl*center;\n"), v)
     }
-    .ev <- et(amt = 100) %>% et(seq(0, 24, by = 2))
+    .ev <- et(amt = 100) |> et(seq(0, 24, by = 2))
     .p <- c(tka = 0.4, tcl = -0.1)
     .a <- rxSolve(rxode2(.mk("e"), calcSens = "e", eventSens = "jump"), .ev,
                   params = c(.p, e = 0.2), returnType = "data.frame",
