@@ -73,6 +73,29 @@ rxTest({
     expect_equal(.b$sigmaRows, nrow(.b$df))
   })
 
+  test_that("omega is drawn per subject from et(id=) as well (#1341)", {
+    # omega was never part of the bug; pin that, so a later change to the
+    # expanded counts cannot quietly take the between-subject draws with it
+    .mo <- rxode2({
+      cli <- cl * exp(eta.cl)
+      d/dt(depot)  <- -ka * depot
+      d/dt(center) <-  ka * depot - cli / v * center
+      cp <- center / v
+      y  <- cp + err
+    })
+    .b <- withr::with_seed(8, {
+      suppressWarnings(rxSolve(.mo, et(amt = 320) |> et(.t1341) |> et(id = 1:6),
+                               .p1341, sigma = .s1341,
+                               omega = lotri(eta.cl ~ 0.3), addDosing = FALSE))
+    })
+    .df <- as.data.frame(.b)
+    # one cli per subject, six distinct subjects
+    expect_equal(length(unique(.df$cli)), 6L)
+    # ... and the residual is still one draw per row
+    expect_equal(length(unique(.df$y - .df$cp)), nrow(.df))
+    expect_equal(nrow(attr(class(.b), ".rxode2.env")$.sigma), nrow(.df))
+  })
+
   test_that("a non-homogeneous multi-subject data set still draws one sigma per row (#1341)", {
     .ev <- rbind(data.frame(id = 1, time = c(0, 1, 2, 3), amt = c(320, NA, NA, NA),
                             evid = c(1, 0, 0, 0)),
