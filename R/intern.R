@@ -29,6 +29,7 @@
 #' @author Matthew L. Fidler
 #' @noRd
 .rxIsReservedName <- function(x) {
+  # nolint next: object_usage_linter. registered in src/init.c
   .Call(`_rxode2_rxIsReservedName`, as.character(x))
 }
 
