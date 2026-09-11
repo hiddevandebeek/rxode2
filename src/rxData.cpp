@@ -3890,6 +3890,40 @@ static inline void rxSolve_ev1Update(const RObject &obj,
   _rxModels[".lastEv1"] = ev1;
 }
 
+// A homogeneous event table stores ONE representative subject per group and the
+// real ids in `rxHomGroups`, so the raw record counts are one group's worth.
+// Expand `rx->nall`/`nobs`/`nobs2`/`nevid9` the way the setup pass does -- the
+// residual (`sigma`) draw is sized from these, and an unexpanded count simulates
+// the residual for the first subject only.  Returns the expanded subject count,
+// or 0 for a table that is not homogeneous, which is left untouched.
+static inline unsigned int rxExpandHomGroupCounts(rx_solve *rx,
+                                                  const RObject &ev1,
+                                                  const IntegerVector &id,
+                                                  const IntegerVector &evid) {
+  RObject hgs = Rf_getAttrib(ev1, Rf_install("rxHomGroups"));
+  if (Rf_isNull(hgs)) return 0;
+  List hgl = as<List>(hgs);
+  int nHg = hgl.size();
+  unsigned int nSub0 = 0;
+  for (int _hg = 0; _hg < nHg; ++_hg) {
+    nSub0 += Rf_length(hgl[_hg]);
+  }
+  int nall = 0, nobs = 0, nobs2 = 0, evid9 = 0;
+  for (int _j = 0; _j < evid.size(); ++_j) {
+    int _gi = id[_j] - 1;
+    int _mult = (_gi >= 0 && _gi < nHg) ? Rf_length(hgl[_gi]) : 1;
+    nall += _mult;
+    if (isObs(evid[_j])) nobs += _mult;
+    if (evid[_j] == 0) nobs2 += _mult;
+    if (evid[_j] == 9) evid9 += _mult;
+  }
+  rx->nall = nall;
+  rx->nobs = nobs;
+  rx->nobs2 = nobs2;
+  rx->nevid9 = evid9;
+  return nSub0;
+}
+
 // This function simulates individual parameter values and residual
 // parameter values and then converts them to a data.frame.  This
 // allows rxSolve_ to solve as if the user specified these parameters
@@ -4010,33 +4044,8 @@ static inline void rxSolve_simulate(const RObject &obj,
         }
         rx->nevid9 = evid9;
         // Get true number of subjects if this is a homogenous event table.
-        RObject hgs = Rf_getAttrib(ev1, Rf_install("rxHomGroups"));
-        if (!Rf_isNull(hgs)) {
-          List hgl = as<List>(hgs);
-          int nHg = hgl.size();
-          nSub0 = 0;
-          for (int _hg = 0; _hg < nHg; ++_hg) {
-            nSub0 += Rf_length(hgl[_hg]);
-          }
-          // A homogeneous table stores ONE representative subject per group and
-          // the real ids in `rxHomGroups`, so the raw row counts above are one
-          // group's worth.  Expand them the way the setup pass below does; the
-          // residual (`sigma`) draw is sized from these, and an unexpanded count
-          // simulates the residual for the first subject only.
-          rx->nall = 0;
-          rx->nobs = 0;
-          rx->nobs2 = 0;
-          evid9 = 0;
-          for (int _j = 0; _j < evid.size(); ++_j) {
-            int _gi = id[_j] - 1;
-            int _mult = (_gi >= 0 && _gi < nHg) ? Rf_length(hgl[_gi]) : 1;
-            rx->nall += _mult;
-            if (isObs(evid[_j])) rx->nobs += _mult;
-            if (evid[_j] == 0) rx->nobs2 += _mult;
-            if (evid[_j] == 9) evid9 += _mult;
-          }
-          rx->nevid9 = evid9;
-        }
+        unsigned int hgSub = rxExpandHomGroupCounts(rx, ev1, id, evid);
+        if (hgSub > 0) nSub0 = hgSub;
       } else {
         nSub0 =1;
         DataFrame dataf = as<DataFrame>(ev1);
