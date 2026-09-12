@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rxode2</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">5.1.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">5.1.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -20,7 +20,7 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-begin"><li><a class="dropdown-item" href="../articles/rxode2-intro.html">Introduction to rxode2</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-syntax.html">rxode2 mini-language syntax</a></li>
     <li><a class="dropdown-item" href="../articles/ode-solvers.html">ODE solvers</a></li>
-    <li><a class="dropdown-item" href="../articles/rxode2-ind-lin.html">Matrix Exponentials / Inductive Linearization</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-ind-lin.html">Matrix Exponential Solving</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-tutorials.html">Interactive tutorials</a></li>
   </ul></li>
 <li class="nav-item dropdown">
@@ -49,7 +49,9 @@
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Variability and uncertainty</h6></li>
     <li><a class="dropdown-item" href="../articles/rxode2-parameter-uncertainty.html">Parameter uncertainty</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-confint.html">Summarizing simulations with confint()</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-eta-eps-resampling.html">ETA/EPS resampling</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-phase-residual-error.html">Separating phase 1 and phase 3 residual error</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-examples" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true"><span class="fa fas fa-hospital"></span> Examples</button>
@@ -69,6 +71,7 @@
     <li><a class="dropdown-item" href="../articles/rxode2-wt.html">Weight-based dosing</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-transit-compartments.html">Transit compartment models</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-stiff.html">Stiff systems and Jacobian specification</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-delay-differential-equations.html">Delay differential equations</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Output and performance</h6></li>
     <li><a class="dropdown-item" href="../articles/rxode2-data-frame.html">Adaptive data frames</a></li>
@@ -140,6 +143,7 @@
 <span>  md5 <span class="op">=</span> <span class="st">""</span>,</span>
 <span>  modName <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  modVars <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  eventSensKey <span class="op">=</span> <span class="va">.rxEventSensCacheKey</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -187,6 +191,19 @@ vector of translated properties.</p></dd>
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Ignored parameters.</p></dd>
 
+
+<dt id="arg-eventsenskey">eventSensKey<a class="anchor" aria-label="anchor" href="#arg-eventsenskey"></a></dt>
+<dd><p>event ("jump") sensitivity mode key folded into
+the parsed md5 cache key so the same model text translated in
+different modes (e.g. <code>"fd"</code> vs <code>"jump"</code>) compiles to distinct
+DLLs instead of colliding on a cached translation.  Defaults to
+the session global <code>.rxEventSensCacheKey</code> (set by <code><a href="rxode2.html">rxode2()</a></code>
+before parsing); an empty string leaves the md5 unchanged so the
+legacy <code>"fd"</code> path keeps existing caches valid.  It is a formal
+argument (rather than read from the global in the body) because
+<code>rxTrans.character</code> is memoised and <code>memoise</code> keys on
+default-valued formals, so the cache distinguishes the modes.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -212,7 +229,7 @@ as well as the <code>C</code> functions names to be called through the compiled 
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

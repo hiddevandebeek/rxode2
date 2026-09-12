@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rxode2</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">5.1.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">5.1.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -20,7 +20,7 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-begin"><li><a class="dropdown-item" href="../articles/rxode2-intro.html">Introduction to rxode2</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-syntax.html">rxode2 mini-language syntax</a></li>
     <li><a class="dropdown-item" href="../articles/ode-solvers.html">ODE solvers</a></li>
-    <li><a class="dropdown-item" href="../articles/rxode2-ind-lin.html">Matrix Exponentials / Inductive Linearization</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-ind-lin.html">Matrix Exponential Solving</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-tutorials.html">Interactive tutorials</a></li>
   </ul></li>
 <li class="nav-item dropdown">
@@ -49,7 +49,9 @@
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Variability and uncertainty</h6></li>
     <li><a class="dropdown-item" href="../articles/rxode2-parameter-uncertainty.html">Parameter uncertainty</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-confint.html">Summarizing simulations with confint()</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-eta-eps-resampling.html">ETA/EPS resampling</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-phase-residual-error.html">Separating phase 1 and phase 3 residual error</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-examples" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true"><span class="fa fas fa-hospital"></span> Examples</button>
@@ -69,6 +71,7 @@
     <li><a class="dropdown-item" href="../articles/rxode2-wt.html">Weight-based dosing</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-transit-compartments.html">Transit compartment models</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-stiff.html">Stiff systems and Jacobian specification</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-delay-differential-equations.html">Delay differential equations</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Output and performance</h6></li>
     <li><a class="dropdown-item" href="../articles/rxode2-data-frame.html">Adaptive data frames</a></li>
@@ -122,11 +125,29 @@
 <span></span>
 <span><span class="fu">assertRxUiNoMix</span><span class="op">(</span><span class="va">ui</span>, extra <span class="op">=</span> <span class="st">""</span>, .var.name <span class="op">=</span> <span class="fu">.vname</span><span class="op">(</span><span class="va">ui</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
+<span><span class="fu">assertRxUiNoAutoregressive</span><span class="op">(</span><span class="va">ui</span>, extra <span class="op">=</span> <span class="st">""</span>, .var.name <span class="op">=</span> <span class="fu">.vname</span><span class="op">(</span><span class="va">ui</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
 <span><span class="fu">assertRxUiSingleEndpoint</span><span class="op">(</span><span class="va">ui</span>, extra <span class="op">=</span> <span class="st">""</span>, .var.name <span class="op">=</span> <span class="fu">.vname</span><span class="op">(</span><span class="va">ui</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">assertRxUiTransformNormal</span><span class="op">(</span><span class="va">ui</span>, extra <span class="op">=</span> <span class="st">""</span>, .var.name <span class="op">=</span> <span class="fu">.vname</span><span class="op">(</span><span class="va">ui</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">assertRxUiNormal</span><span class="op">(</span><span class="va">ui</span>, extra <span class="op">=</span> <span class="st">""</span>, .var.name <span class="op">=</span> <span class="fu">.vname</span><span class="op">(</span><span class="va">ui</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">testRxUiPriors</span><span class="op">(</span><span class="va">ui</span>, extra <span class="op">=</span> <span class="st">""</span>, .var.name <span class="op">=</span> <span class="fu">.vname</span><span class="op">(</span><span class="va">ui</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">testRxUiNormalPriors</span><span class="op">(</span><span class="va">ui</span>, extra <span class="op">=</span> <span class="st">""</span>, .var.name <span class="op">=</span> <span class="fu">.vname</span><span class="op">(</span><span class="va">ui</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">testRxUiOmegaDf</span><span class="op">(</span><span class="va">ui</span>, extra <span class="op">=</span> <span class="st">""</span>, .var.name <span class="op">=</span> <span class="fu">.vname</span><span class="op">(</span><span class="va">ui</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">testRxUiOmegaNormalPriors</span><span class="op">(</span><span class="va">ui</span>, extra <span class="op">=</span> <span class="st">""</span>, .var.name <span class="op">=</span> <span class="fu">.vname</span><span class="op">(</span><span class="va">ui</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">assertRxUiNoPriors</span><span class="op">(</span><span class="va">ui</span>, extra <span class="op">=</span> <span class="st">""</span>, .var.name <span class="op">=</span> <span class="fu">.vname</span><span class="op">(</span><span class="va">ui</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">assertRxUiNormalPriors</span><span class="op">(</span><span class="va">ui</span>, extra <span class="op">=</span> <span class="st">""</span>, .var.name <span class="op">=</span> <span class="fu">.vname</span><span class="op">(</span><span class="va">ui</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">assertRxUiNoOmegaDf</span><span class="op">(</span><span class="va">ui</span>, extra <span class="op">=</span> <span class="st">""</span>, .var.name <span class="op">=</span> <span class="fu">.vname</span><span class="op">(</span><span class="va">ui</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">assertRxUiNoOmegaNormalPriors</span><span class="op">(</span><span class="va">ui</span>, extra <span class="op">=</span> <span class="st">""</span>, .var.name <span class="op">=</span> <span class="fu">.vname</span><span class="op">(</span><span class="va">ui</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">assertRxUiMuRefOnly</span><span class="op">(</span><span class="va">ui</span>, extra <span class="op">=</span> <span class="st">""</span>, .var.name <span class="op">=</span> <span class="fu">.vname</span><span class="op">(</span><span class="va">ui</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -181,6 +202,25 @@ population effect, only)</p></li>
 <li><p><code>assertRxUiRandomOnIdOnly</code> – Make sure there are only random effects at the ID level</p></li>
 <li><p><code>assertRxUiIovNoCor</code> – Make sure that the IOV model does not have any correlations</p></li>
 <li><p><code>assertRxUiNoMix</code> – Make sure that the model does not have a mixture model inside it</p></li>
+<li><p><code>assertRxUiNoAutoregressive</code> – Make sure the model does not have an
+autoregressive residual (ie <code><a href="https://rdrr.io/r/stats/ar.html" class="external-link">ar()</a></code>); used by estimation methods that do
+not support it</p></li>
+<li><p><code>assertRxUiNoPriors</code> – Make sure the model does not specify any prior
+distributions; used by estimation methods that cannot use them, so that
+a specified prior is an error instead of being silently ignored</p></li>
+<li><p><code>assertRxUiNormalPriors</code> – Make sure that every prior the model
+specifies is a normal prior (<code><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">dnorm()</a></code>, <code>stdNormal()</code>, or
+the multivariate <code>multiNormal()</code> that the <code>lotri</code> normal prior
+shorthand produces for correlated parameters); used by estimation
+methods that support priors but only normal ones</p></li>
+<li><p><code>assertRxUiNoOmegaDf</code> – Make sure the model does not give prior
+degrees of freedom for an omega block (ie <code>invWishart(4)</code>, the
+<code>$OMEGAPD</code> of a NONMEM NWPRI model); used by estimation methods that
+cannot use them</p></li>
+<li><p><code>assertRxUiNoOmegaNormalPriors</code> – Make sure the model does not put a
+normal prior on an omega parameter (ie <code>om.eta.cl ~ 0.01</code>, what a
+NONMEM TNPRI model needs); used by estimation methods that can put a
+prior on an omega but only a Wishart one</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -190,6 +230,10 @@ population effect, only)</p></li>
 <code><a href="assertCompartmentNew.html">assertCompartmentNew()</a></code>,
 <code><a href="assertVariableExists.html">assertVariableExists()</a></code>,
 <code><a href="assertVariableNew.html">assertVariableNew()</a></code>,
+<code><a href="rxPriorBuildSpec.html">rxPriorBuildSpec()</a></code>,
+<code><a href="rxPriorLogDensity.html">rxPriorLogDensity()</a></code>,
+<code><a href="rxPriorOmegaToCholOmegaInvGrad.html">rxPriorOmegaToCholOmegaInvGrad()</a></code>,
+<code><a href="rxUiPriors.html">rxUiPriors()</a></code>,
 <code><a href="testIniDf.html">testIniDf()</a></code>,
 <code><a href="testRxUnbounded.html">testRxUnbounded()</a></code></p></div>
     </div>
@@ -244,7 +288,7 @@ population effect, only)</p></li>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

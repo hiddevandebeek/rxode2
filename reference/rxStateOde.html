@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rxode2</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">5.1.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">5.1.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -20,7 +20,7 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-begin"><li><a class="dropdown-item" href="../articles/rxode2-intro.html">Introduction to rxode2</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-syntax.html">rxode2 mini-language syntax</a></li>
     <li><a class="dropdown-item" href="../articles/ode-solvers.html">ODE solvers</a></li>
-    <li><a class="dropdown-item" href="../articles/rxode2-ind-lin.html">Matrix Exponentials / Inductive Linearization</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-ind-lin.html">Matrix Exponential Solving</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-tutorials.html">Interactive tutorials</a></li>
   </ul></li>
 <li class="nav-item dropdown">
@@ -49,7 +49,9 @@
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Variability and uncertainty</h6></li>
     <li><a class="dropdown-item" href="../articles/rxode2-parameter-uncertainty.html">Parameter uncertainty</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-confint.html">Summarizing simulations with confint()</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-eta-eps-resampling.html">ETA/EPS resampling</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-phase-residual-error.html">Separating phase 1 and phase 3 residual error</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-examples" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true"><span class="fa fas fa-hospital"></span> Examples</button>
@@ -69,6 +71,7 @@
     <li><a class="dropdown-item" href="../articles/rxode2-wt.html">Weight-based dosing</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-transit-compartments.html">Transit compartment models</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-stiff.html">Stiff systems and Jacobian specification</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-delay-differential-equations.html">Delay differential equations</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Output and performance</h6></li>
     <li><a class="dropdown-item" href="../articles/rxode2-data-frame.html">Adaptive data frames</a></li>
@@ -136,7 +139,7 @@
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">mod</span> <span class="op">&lt;-</span> <span class="fu"><a href="rxode2.html">rxode2</a></span><span class="op">(</span><span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="va">Cp</span> <span class="op">&lt;-</span> <span class="fu">linCmt</span><span class="op">(</span><span class="va">Cl</span>, <span class="va">V</span>, <span class="va">Q2</span>, <span class="va">V2</span>, <span class="va">Q3</span>, <span class="va">V3</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">ke0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">/</span><span class="op">(</span><span class="fl">50</span><span class="op">)</span></span></span>
@@ -177,6 +180,7 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> [23] "rx__sens_peripheral2_BY_p3" "rx__sens_peripheral2_BY_p4"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [25] "rx__sens_peripheral2_BY_p5" "rx__sens_peripheral2_BY_ka"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [27] "rx__sens_depot_BY_ka"      </span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
@@ -189,7 +193,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

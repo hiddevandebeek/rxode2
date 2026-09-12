@@ -26,7 +26,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rxode2</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">5.1.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">5.1.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,7 +41,7 @@
 <li><a class="dropdown-item" href="../articles/rxode2-intro.html">Introduction to rxode2</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-syntax.html">rxode2 mini-language syntax</a></li>
     <li><a class="dropdown-item" href="../articles/ode-solvers.html">ODE solvers</a></li>
-    <li><a class="dropdown-item" href="../articles/rxode2-ind-lin.html">Matrix Exponentials / Inductive Linearization</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-ind-lin.html">Matrix Exponential Solving</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-tutorials.html">Interactive tutorials</a></li>
   </ul>
 </li>
@@ -76,7 +76,9 @@
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Variability and uncertainty</h6></li>
     <li><a class="dropdown-item" href="../articles/rxode2-parameter-uncertainty.html">Parameter uncertainty</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-confint.html">Summarizing simulations with confint()</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-eta-eps-resampling.html">ETA/EPS resampling</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-phase-residual-error.html">Separating phase 1 and phase 3 residual error</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -100,6 +102,7 @@
     <li><a class="dropdown-item" href="../articles/rxode2-wt.html">Weight-based dosing</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-transit-compartments.html">Transit compartment models</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-stiff.html">Stiff systems and Jacobian specification</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-delay-differential-equations.html">Delay differential equations</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Output and performance</h6></li>
     <li><a class="dropdown-item" href="../articles/rxode2-data-frame.html">Adaptive data frames</a></li>
@@ -290,9 +293,11 @@ subjects uses all available cores automatically:</p>
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/getRxThreads.html">getRxThreads</a></span><span class="op">(</span><span class="op">)</span>   <span class="co"># inspect active thread count</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/rxSolve.html">rxSolve</a></span><span class="op">(</span><span class="va">mod</span>, <span class="va">ev</span>, params <span class="op">=</span> <span class="va">theta</span>, omega <span class="op">=</span> <span class="va">omega</span>, nSub <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span></span></code></pre></div>
-<p>NONMEM’s <code>$SIMULATION</code> step solves subjects sequentially
-within a single run. Parallelism requires submitting multiple NONMEM
-runs to an HPC cluster (e.g., via PsN).</p>
+<p>NONMEM’s <code>$SIMULATION</code> step can also be parallelized, via
+a parafile and the <code>nmfe</code> <code>[nodes]=</code> option
+(native MPI support since NONMEM 7.2), but this spreads the work across
+separate OS processes rather than threads within one process, and is
+usually configured through PsN rather than run directly.</p>
 </div>
 <div class="section level3">
 <h3 id="native-r-workflow-no-file-io">Native R workflow – no file I/O<a class="anchor" aria-label="anchor" href="#native-r-workflow-no-file-io"></a>
@@ -385,20 +390,66 @@ simulation and nlmixr2 estimation:</p>
 <div class="section level3">
 <h3 id="multiple-ode-solver-backends">Multiple ODE solver backends<a class="anchor" aria-label="anchor" href="#multiple-ode-solver-backends"></a>
 </h3>
-<p>rxode2 provides three solver backends selectable per call:
-thread-safe C LSODA (default), Fortran LSODA, and DOP853 (explicit
-8th-order Runge-Kutta for non-stiff systems). NONMEM’s solver is fixed
-to the ADVAN specified in the control stream.</p>
+<p>rxode2 provides several solver backends selectable per call:
+thread-safe C LSODA (default), Fortran LSODA, DOP853 (explicit 8th-order
+Runge-Kutta for non-stiff systems), a stiff Rosenbrock method
+(<code>ros4</code>), and AutoSwitch composite methods (for example
+<code>method = "dop853+ros4"</code>) that probe each segment with a
+non-stiff primary and reactively fall back to a stiff secondary only
+where stiffness is detected. NONMEM’s solver is fixed to the ADVAN
+specified in the control stream.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/rxSolve.html">rxSolve</a></span><span class="op">(</span><span class="va">mod</span>, <span class="va">ev</span>, method <span class="op">=</span> <span class="st">"dop853"</span><span class="op">)</span>   <span class="co"># non-stiff, fast</span></span>
-<span><span class="fu"><a href="../reference/rxSolve.html">rxSolve</a></span><span class="op">(</span><span class="va">mod</span>, <span class="va">ev</span>, method <span class="op">=</span> <span class="st">"lsoda"</span><span class="op">)</span>    <span class="co"># default adaptive solver</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/rxSolve.html">rxSolve</a></span><span class="op">(</span><span class="va">mod</span>, <span class="va">ev</span>, method <span class="op">=</span> <span class="st">"dop853"</span><span class="op">)</span>      <span class="co"># non-stiff, fast</span></span>
+<span><span class="fu"><a href="../reference/rxSolve.html">rxSolve</a></span><span class="op">(</span><span class="va">mod</span>, <span class="va">ev</span>, method <span class="op">=</span> <span class="st">"lsoda"</span><span class="op">)</span>       <span class="co"># default adaptive solver</span></span>
+<span><span class="fu"><a href="../reference/rxSolve.html">rxSolve</a></span><span class="op">(</span><span class="va">mod</span>, <span class="va">ev</span>, method <span class="op">=</span> <span class="st">"dop853+ros4"</span><span class="op">)</span> <span class="co"># non-stiff probe, stiff fallback</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="delay-differential-equations">Delay differential equations<a class="anchor" aria-label="anchor" href="#delay-differential-equations"></a>
+</h3>
+<p>Both tools can solve delay differential equations, through different
+mechanisms. rxode2 uses <code>delay(state, T)</code>, which evaluates an
+ODE state at the past time <code>t - T</code> (Monolix
+<code><a href="../reference/delay.html">delay()</a></code> semantics) using dense-output interpolation. NONMEM
+supports DDEs through its RADAR5 solver (<code>ADVAN16</code>, an
+implicit Runge-Kutta method suited to stiff and state-dependent delays),
+where the delay time and the delayed history of a state are declared
+with the reserved
+<code>TAUy</code>/<code>AP_x_y</code>/<code>AD_x_y</code> variables in
+the <code>$DES</code> block. The main rxode2 advantage is that it
+generates forward sensitivities for <code><a href="../reference/delay.html">delay()</a></code> automatically,
+so delay models remain estimable by gradient-based methods in
+nlmixr2.</p>
+</div>
+<div class="section level3">
+<h3 id="automatic-ode-to-lincmt-conversion">Automatic ODE-to-<code>linCmt()</code> conversion<a class="anchor" aria-label="anchor" href="#automatic-ode-to-lincmt-conversion"></a>
+</h3>
+<p>When a model’s ODE system is a 1-3 compartment linear PK system,
+rxode2 detects this and transparently solves it with the fast analytical
+<code>linCmt()</code> path (<code>rxSolve(..., useLinCmt = TRUE)</code>,
+the default), falling back to the ODE solver if the converted model
+cannot be compiled.</p>
+</div>
+<div class="section level3">
+<h3 id="out-of-memory-simulation-and-distributed-parallelism">Out-of-memory simulation and distributed parallelism<a class="anchor" aria-label="anchor" href="#out-of-memory-simulation-and-distributed-parallelism"></a>
+</h3>
+<p>rxode2 can write a large population result to disk instead of holding
+it in RAM: passing a <code>file</code> prefix to <code><a href="../reference/rxSolve.html">rxSolve()</a></code>
+splits subjects into RAM-sized chunks (auto-sized with
+<code><a href="../reference/rxMemoryEstimate.html">rxMemoryEstimate()</a></code>), solves each, and stores them as
+Parquet (or <code>.rds</code>) files behind a lightweight object that
+supports lazy <code>dplyr</code>/DuckDB queries. Chunks can additionally
+be dispatched to <code>mirai</code> daemons
+(<code>rxSolve(..., parallel = n)</code>) for distributed/HPC execution,
+all from pure R.</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/rxSolve.html">rxSolve</a></span><span class="op">(</span><span class="va">mod</span>, <span class="va">params</span>, <span class="va">ev</span>, file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="st">"rx"</span><span class="op">)</span>, parallel <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="reproducible-seeds-in-r">Reproducible seeds in R<a class="anchor" aria-label="anchor" href="#reproducible-seeds-in-r"></a>
 </h3>
 <p>Random seeds for stochastic simulations are set with standard R
 conventions and are fully reproducible across platforms:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">12345</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/rxSolve.html">rxSolve</a></span><span class="op">(</span><span class="va">mod</span>, <span class="va">ev</span>, params <span class="op">=</span> <span class="va">theta</span>, omega <span class="op">=</span> <span class="va">omega</span>, nSub <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span></code></pre></div>
 <p>NONMEM’s <code>$SIMULATION (seed)</code> syntax is
@@ -534,12 +585,18 @@ customised models. rxode2 supports custom C via <code><a href="../reference/rxFu
 Fortran.</p>
 </div>
 <div class="section level3">
-<h3 id="cluster-submission-via-psn">Cluster submission via PsN<a class="anchor" aria-label="anchor" href="#cluster-submission-via-psn"></a>
+<h3 id="native-mpi-parallel-processing-and-cluster-submission-via-psn">Native MPI parallel processing and cluster submission via PsN<a class="anchor" aria-label="anchor" href="#native-mpi-parallel-processing-and-cluster-submission-via-psn"></a>
 </h3>
-<p>PsN (Perl-speaks-NONMEM) can distribute NONMEM simulation runs across
-HPC cluster nodes. rxode2’s parallelism is always within a single R
-process via OpenMP; distributed computing requires additional R
-infrastructure (e.g., <code>future</code>, <code>batchtools</code>).</p>
+<p>NONMEM has built-in MPI-based parallel processing (a parafile and the
+<code>nmfe</code> <code>[nodes]=</code> option, since NONMEM 7.2) for a
+single <code>$SIMULATION</code> or estimation run across cores or
+cluster nodes; PsN (Perl-speaks- NONMEM) automates generating parafiles
+and distributing runs across an HPC cluster. rxode2 parallelizes across
+OpenMP threads within a process and, since 5.1.1, can also distribute
+chunks of subjects to <code>mirai</code> daemons for HPC/cluster
+execution (built into <code><a href="../reference/rxSolve.html">rxSolve()</a></code>’s out-of-memory path via
+the <code>parallel</code> argument), though it does not integrate with
+PsN or NONMEM parafiles specifically.</p>
 </div>
 <div class="section level3">
 <h3 id="steady-state-dosing-ss1-ii">Steady-state dosing (<code>SS=1</code>, <code>II</code>)<a class="anchor" aria-label="anchor" href="#steady-state-dosing-ss1-ii"></a>
@@ -630,104 +687,120 @@ passed to the <code>vpc</code> R package or Xpose for VPC plots.</p>
 <td>seconds to minutes per run</td>
 </tr>
 <tr class="even">
-<td>OpenMP within-process parallelism</td>
-<td>yes</td>
-<td>no (sequential subjects)</td>
+<td>In-process multithreading</td>
+<td>yes (OpenMP)</td>
+<td>no (MPI across separate processes, since 7.2)</td>
 </tr>
 <tr class="odd">
-<td>Cluster submission</td>
-<td>via R (<code>future</code>, etc.)</td>
-<td>via PsN</td>
+<td>Cluster / distributed submission</td>
+<td>yes (built-in <code>mirai</code>)</td>
+<td>yes (native parafile MPI, or via PsN)</td>
 </tr>
 <tr class="even">
+<td>Out-of-memory / disk-backed solve</td>
+<td>yes (<code>rxSolve(file=)</code>, Parquet/DuckDB)</td>
+<td>writes tables to disk</td>
+</tr>
+<tr class="odd">
 <td>Model re-implementation needed</td>
 <td>yes (or <code>nonmem2rx</code>)</td>
 <td>no</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Re-implementation validation</td>
 <td>
 <code>nonmem2rx</code> auto-checks PRED/IPRED/IWRES</td>
 <td>N/A</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Full ADVAN coverage</td>
 <td>partial (most common models)</td>
 <td>yes (ADVAN1-13)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>
 <code>$MIXTURE</code> models</td>
 <td>partial (<code>nonmem2rx</code> import, no auto-validation)</td>
 <td>yes</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Verbatim Fortran in model</td>
 <td>no</td>
 <td>yes</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Analytical 1-3 cmt solutions</td>
 <td>
 <code>linCmt()</code> with gradients</td>
 <td>ADVAN1/2/3/4/11/12</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Model piping / scenario analysis</td>
 <td>yes (<code>\|&gt;</code>)</td>
 <td>edit control stream + re-run</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Native R output (data frame)</td>
 <td>yes</td>
 <td>parse table file</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>File I/O required</td>
 <td>no</td>
 <td>yes</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Reproducible seeds cross-platform</td>
 <td>yes (R RNG)</td>
 <td>version/OS dependent</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>NONMEM-format datasets</td>
 <td>yes</td>
 <td>yes</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Extended EVIDs (replace, multiply)</td>
 <td>yes (EVID=5/6/7)</td>
 <td>no</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>EBE-based simulation</td>
 <td>yes (<code>nonmem2rx</code> imports EBEs)</td>
 <td>yes</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Parameter uncertainty simulation</td>
 <td>yes (<code>nonmem2rx</code> imports covariance)</td>
 <td>yes (<code>$COVARIANCE</code>)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>nlmixr2 estimation</td>
 <td>yes</td>
 <td>no (separate estimation step)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Symbolic Jacobians</td>
-<td>yes</td>
+<td>yes (up to 3rd order + jump sensitivities)</td>
 <td>no</td>
 </tr>
+<tr class="odd">
+<td>Delay differential equations</td>
+<td>yes (<code><a href="../reference/delay.html">delay()</a></code>, auto sensitivities)</td>
+<td>yes (RADAR5 / <code>ADVAN16</code>)</td>
+</tr>
 <tr class="even">
-<td>Multiple ODE solver backends</td>
-<td>LSODA (C), LSODA (Fortran), DOP853</td>
-<td>fixed per ADVAN</td>
+<td>Automatic ODE -&gt; <code>linCmt()</code> conversion</td>
+<td>yes (<code>useLinCmt=TRUE</code>)</td>
+<td>no</td>
 </tr>
 <tr class="odd">
+<td>Multiple ODE solver backends</td>
+<td>LSODA (C/Fortran), DOP853, ros4, <code>"dop853+ros4"</code>
+</td>
+<td>fixed per ADVAN</td>
+</tr>
+<tr class="even">
 <td>Shiny / portable deployment</td>
 <td>yes</td>
 <td>no (requires NONMEM install)</td>
@@ -764,7 +837,7 @@ package</a></li>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

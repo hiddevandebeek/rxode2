@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rxode2</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">5.1.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">5.1.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -20,7 +20,7 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-begin"><li><a class="dropdown-item" href="../articles/rxode2-intro.html">Introduction to rxode2</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-syntax.html">rxode2 mini-language syntax</a></li>
     <li><a class="dropdown-item" href="../articles/ode-solvers.html">ODE solvers</a></li>
-    <li><a class="dropdown-item" href="../articles/rxode2-ind-lin.html">Matrix Exponentials / Inductive Linearization</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-ind-lin.html">Matrix Exponential Solving</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-tutorials.html">Interactive tutorials</a></li>
   </ul></li>
 <li class="nav-item dropdown">
@@ -49,7 +49,9 @@
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Variability and uncertainty</h6></li>
     <li><a class="dropdown-item" href="../articles/rxode2-parameter-uncertainty.html">Parameter uncertainty</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-confint.html">Summarizing simulations with confint()</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-eta-eps-resampling.html">ETA/EPS resampling</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-phase-residual-error.html">Separating phase 1 and phase 3 residual error</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-examples" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true"><span class="fa fas fa-hospital"></span> Examples</button>
@@ -69,6 +71,7 @@
     <li><a class="dropdown-item" href="../articles/rxode2-wt.html">Weight-based dosing</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-transit-compartments.html">Transit compartment models</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-stiff.html">Stiff systems and Jacobian specification</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-delay-differential-equations.html">Delay differential equations</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Output and performance</h6></li>
     <li><a class="dropdown-item" href="../articles/rxode2-data-frame.html">Adaptive data frames</a></li>
@@ -122,6 +125,20 @@
 
         </dt>
         <dd>Create an ODE-based model specification</dd>
+
+        <dt>
+
+          <code><a href="rxModelName.html">rxModelName()</a></code>
+
+        </dt>
+        <dd>Name a model from the function that created it</dd>
+
+        <dt>
+
+          <code><a href="rxModelNameLhs.html">rxModelNameLhs()</a></code>
+
+        </dt>
+        <dd>Name a model from the left hand side of an assignment</dd>
 
         <dt>
 
@@ -239,6 +256,13 @@
 
         <dt>
 
+          <code><a href="rxEventTableFile.html">rxEventTableFile()</a></code>
+
+        </dt>
+        <dd>Create a file-backed event table reference</dd>
+
+        <dt>
+
           <code><a href="splitBolus.html">splitBolus()</a></code>
 
         </dt>
@@ -341,10 +365,66 @@
 
         <dt>
 
+          <code><a href="rxSolveChunked.html">rxSolveChunked()</a></code>
+
+        </dt>
+        <dd>Solve an ODE model in memory-safe chunks</dd>
+
+        <dt>
+
           <code><a href="rxCbindStudyIndividual.html">rxCbindStudyIndividual()</a></code>
 
         </dt>
         <dd>Bind the study parameters and individual parameters</dd>
+
+        <dt>
+
+          <code><a href="as.arrow.html">as.arrow()</a></code>
+
+        </dt>
+        <dd>Convert an rxSolveOom result to a lazy Arrow Dataset</dd>
+
+        <dt>
+
+          <code><a href="rxRegisterUiPrep.html">rxRegisterUiPrep()</a></code> <code><a href="rxRegisterUiPrep.html">rxRemoveUiPrep()</a></code>
+
+        </dt>
+        <dd>Register or remove a solve-time ui preparation hook</dd>
+
+        <dt>
+
+          <code><a href="rxRegisterUiAssembled.html">rxRegisterUiAssembled()</a></code> <code><a href="rxRegisterUiAssembled.html">rxRemoveUiAssembled()</a></code>
+
+        </dt>
+        <dd>Register or remove a ui assembly hook</dd>
+
+        <dt>
+
+          <code><a href="rxParLoader.html">rxParLoader()</a></code> <code><a href="rxParLoader.html">`rxParLoader&lt;-`()</a></code>
+
+        </dt>
+        <dd>Parameter-loader flag on a model</dd>
+
+        <dt>
+
+          <code><a href="rxSetActiveParLoader.html">rxSetActiveParLoader()</a></code> <code><a href="rxSetActiveParLoader.html">rxClearActiveParLoader()</a></code>
+
+        </dt>
+        <dd>Activate a registered parameter loader for solves</dd>
+
+        <dt>
+
+          <code><a href="rxInjectedPars.html">rxInjectedPars()</a></code>
+
+        </dt>
+        <dd>Parameters injected into a solve by a par-loader hook</dd>
+
+        <dt>
+
+          <code><a href="rxForcedPars.html">rxForcedPars()</a></code> <code><a href="rxForcedPars.html">`rxForcedPars&lt;-`()</a></code>
+
+        </dt>
+        <dd>Forced parameters carried by a model / ui</dd>
       </dl></div><div class="section level2">
       <h2 id="model-ui-piping">Model UI &amp; Piping<a class="anchor" aria-label="anchor" href="#model-ui-piping"></a></h2>
 
@@ -399,7 +479,7 @@
 
         <dt>
 
-          <code><a href="assertRxUi.html">assertRxUi()</a></code> <code><a href="assertRxUi.html">assertRxUiPrediction()</a></code> <code><a href="assertRxUi.html">assertRxUiIovNoCor()</a></code> <code><a href="assertRxUi.html">assertRxUiNoMix()</a></code> <code><a href="assertRxUi.html">assertRxUiSingleEndpoint()</a></code> <code><a href="assertRxUi.html">assertRxUiTransformNormal()</a></code> <code><a href="assertRxUi.html">assertRxUiNormal()</a></code> <code><a href="assertRxUi.html">assertRxUiMuRefOnly()</a></code> <code><a href="assertRxUi.html">assertRxUiEstimatedResiduals()</a></code> <code><a href="assertRxUi.html">assertRxUiPopulationOnly()</a></code> <code><a href="assertRxUi.html">assertRxUiMixedOnly()</a></code> <code><a href="assertRxUi.html">assertRxUiRandomOnIdOnly()</a></code>
+          <code><a href="assertRxUi.html">assertRxUi()</a></code> <code><a href="assertRxUi.html">assertRxUiPrediction()</a></code> <code><a href="assertRxUi.html">assertRxUiIovNoCor()</a></code> <code><a href="assertRxUi.html">assertRxUiNoMix()</a></code> <code><a href="assertRxUi.html">assertRxUiNoAutoregressive()</a></code> <code><a href="assertRxUi.html">assertRxUiSingleEndpoint()</a></code> <code><a href="assertRxUi.html">assertRxUiTransformNormal()</a></code> <code><a href="assertRxUi.html">assertRxUiNormal()</a></code> <code><a href="assertRxUi.html">testRxUiPriors()</a></code> <code><a href="assertRxUi.html">testRxUiNormalPriors()</a></code> <code><a href="assertRxUi.html">testRxUiOmegaDf()</a></code> <code><a href="assertRxUi.html">testRxUiOmegaNormalPriors()</a></code> <code><a href="assertRxUi.html">assertRxUiNoPriors()</a></code> <code><a href="assertRxUi.html">assertRxUiNormalPriors()</a></code> <code><a href="assertRxUi.html">assertRxUiNoOmegaDf()</a></code> <code><a href="assertRxUi.html">assertRxUiNoOmegaNormalPriors()</a></code> <code><a href="assertRxUi.html">assertRxUiMuRefOnly()</a></code> <code><a href="assertRxUi.html">assertRxUiEstimatedResiduals()</a></code> <code><a href="assertRxUi.html">assertRxUiPopulationOnly()</a></code> <code><a href="assertRxUi.html">assertRxUiMixedOnly()</a></code> <code><a href="assertRxUi.html">assertRxUiRandomOnIdOnly()</a></code>
 
         </dt>
         <dd>Assert properties of the rxUi models</dd>
@@ -417,6 +497,13 @@
 
         </dt>
         <dd>Assert a variable would be new to the model</dd>
+
+        <dt>
+
+          <code><a href="coef.rxUi.html">coef(<i>&lt;rxUi&gt;</i>)</a></code> <code><a href="coef.rxUi.html">coef(<i>&lt;function&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Extract the initial coefficients from an rxode2 model (rxUi)</dd>
 
         <dt>
 
@@ -497,6 +584,27 @@
 
         <dt>
 
+          <code><a href="rxPriorBuildSpec.html">rxPriorBuildSpec()</a></code>
+
+        </dt>
+        <dd>Build the C spec <code>rxPriorLogDensityEval()</code> (and the C API) evaluates</dd>
+
+        <dt>
+
+          <code><a href="rxPriorLogDensity.html">rxPriorLogDensity()</a></code>
+
+        </dt>
+        <dd>Value and gradient of a model's prior log density, on the natural scale</dd>
+
+        <dt>
+
+          <code><a href="rxPriorOmegaToCholOmegaInvGrad.html">rxPriorOmegaToCholOmegaInvGrad()</a></code>
+
+        </dt>
+        <dd>Chain-rule a natural-scale omega gradient into FOCEI's cholOmegaInv scale</dd>
+
+        <dt>
+
           <code><a href="rxRename.html">rxRename()</a></code> <code><a href="rxRename.html">.rxRename()</a></code> <code><a href="rxRename.html">rename.rxUi()</a></code> <code><a href="rxRename.html">rename.function()</a></code>
 
         </dt>
@@ -522,6 +630,13 @@
 
         </dt>
         <dd>Compress/Decompress <code>rxode2</code> ui</dd>
+
+        <dt>
+
+          <code><a href="rxUiPriors.html">rxUiPriors()</a></code>
+
+        </dt>
+        <dd>Priors specified in a model</dd>
 
         <dt>
 
@@ -575,6 +690,13 @@
 
 
       <dl><dt>
+
+          <code><a href="confint.rxSolve.html">confint(<i>&lt;rxSolve&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Simulated percentiles, with confidence bands, from a solved rxode2 object</dd>
+
+        <dt>
 
           <code><a href="rxRmvn.html">rxRmvn()</a></code>
 
@@ -819,6 +941,13 @@
 
         </dt>
         <dd>boxCox/yeoJohnson and inverse boxCox/yeoJohnson functions</dd>
+
+        <dt>
+
+          <code><a href="delay.html">delay()</a></code>
+
+        </dt>
+        <dd>Delayed state for delay differential equations</dd>
 
         <dt>
 
@@ -1468,6 +1597,13 @@
 
         <dt>
 
+          <code><a href="rxOmegaVarCovDeriv.html">rxOmegaVarCovDeriv()</a></code>
+
+        </dt>
+        <dd>Variance-covariance (non-Cholesky) Omega parameterization derivatives</dd>
+
+        <dt>
+
           <code><a href="swapMatListWithCube.html">swapMatListWithCube()</a></code>
 
         </dt>
@@ -1590,6 +1726,13 @@
 
         </dt>
         <dd>Internal function to generate the model variables for a linCmt() model</dd>
+
+        <dt>
+
+          <code><a href="dot-rxSensStrippable.html">.rxSensStrippable()</a></code>
+
+        </dt>
+        <dd>Get model properties without compiling it.</dd>
 
         <dt>
 
@@ -1768,6 +1911,13 @@
 
         <dt>
 
+          <code><a href="rxHasAr.html">rxHasAr()</a></code>
+
+        </dt>
+        <dd>Test if a model uses an autoregressive (<code><a href="https://rdrr.io/r/stats/ar.html" class="external-link">ar()</a></code>) residual</dd>
+
+        <dt>
+
           <code><a href="rxHtml.html">rxHtml()</a></code>
 
         </dt>
@@ -1891,6 +2041,20 @@
 
         </dt>
         <dd>Set timing for progress bar</dd>
+
+        <dt>
+
+          <code><a href="rxSolveAdjoint.html">rxSolveAdjoint()</a></code>
+
+        </dt>
+        <dd>Solve a model with adjoint (backward) sensitivities, drop-in for forward sens</dd>
+
+        <dt>
+
+          <code><a href="rxSolveAdjointRk4.html">rxSolveAdjointRk4()</a></code>
+
+        </dt>
+        <dd>Solve a model with an in-engine discrete-adjoint (<code>s</code>) method</dd>
 
         <dt>
 
@@ -2034,7 +2198,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

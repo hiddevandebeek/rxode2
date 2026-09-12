@@ -26,7 +26,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rxode2</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">5.1.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">5.1.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,7 +41,7 @@
 <li><a class="dropdown-item" href="../articles/rxode2-intro.html">Introduction to rxode2</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-syntax.html">rxode2 mini-language syntax</a></li>
     <li><a class="dropdown-item" href="../articles/ode-solvers.html">ODE solvers</a></li>
-    <li><a class="dropdown-item" href="../articles/rxode2-ind-lin.html">Matrix Exponentials / Inductive Linearization</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-ind-lin.html">Matrix Exponential Solving</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-tutorials.html">Interactive tutorials</a></li>
   </ul>
 </li>
@@ -76,7 +76,9 @@
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Variability and uncertainty</h6></li>
     <li><a class="dropdown-item" href="../articles/rxode2-parameter-uncertainty.html">Parameter uncertainty</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-confint.html">Summarizing simulations with confint()</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-eta-eps-resampling.html">ETA/EPS resampling</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-phase-residual-error.html">Separating phase 1 and phase 3 residual error</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -100,6 +102,7 @@
     <li><a class="dropdown-item" href="../articles/rxode2-wt.html">Weight-based dosing</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-transit-compartments.html">Transit compartment models</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-stiff.html">Stiff systems and Jacobian specification</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-delay-differential-equations.html">Delay differential equations</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Output and performance</h6></li>
     <li><a class="dropdown-item" href="../articles/rxode2-data-frame.html">Adaptive data frames</a></li>
@@ -156,7 +159,7 @@
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://nlmixr2.github.io/rxode2/">rxode2</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; rxode2 5.1.3 using 2 threads (see ?getRxThreads)</span></span>
+<span><span class="co">#&gt; rxode2 5.1.7 using 2 threads (see ?getRxThreads)</span></span>
 <span><span class="co">#&gt;   no cache: create with `rxCreateCache()`</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="rxode2-model-function-object">rxode2 model function object<a class="anchor" aria-label="anchor" href="#rxode2-model-function-object"></a>
@@ -312,24 +315,24 @@ and a residual error to see the difference</p>
 <span><span class="co">#&gt; 15     15    NA    NA       EC50  -Inf  5.000000   Inf FALSE  &lt;NA&gt;</span></span>
 <span><span class="co">#&gt; 16     NA     1     1     eta.ka  -Inf  0.010000   Inf FALSE  &lt;NA&gt;</span></span>
 <span><span class="co">#&gt; 17     NA     2     2     eta.cl  -Inf  0.010000   Inf FALSE  &lt;NA&gt;</span></span>
-<span><span class="co">#&gt;    backTransform condition  err</span></span>
-<span><span class="co">#&gt; 1           &lt;NA&gt;      &lt;NA&gt; &lt;NA&gt;</span></span>
-<span><span class="co">#&gt; 2           &lt;NA&gt;      &lt;NA&gt; &lt;NA&gt;</span></span>
-<span><span class="co">#&gt; 3           &lt;NA&gt;      &lt;NA&gt; &lt;NA&gt;</span></span>
-<span><span class="co">#&gt; 4           &lt;NA&gt;      &lt;NA&gt; &lt;NA&gt;</span></span>
-<span><span class="co">#&gt; 5           &lt;NA&gt;      &lt;NA&gt; &lt;NA&gt;</span></span>
-<span><span class="co">#&gt; 6           &lt;NA&gt;      &lt;NA&gt; &lt;NA&gt;</span></span>
-<span><span class="co">#&gt; 7           &lt;NA&gt;      &lt;NA&gt; &lt;NA&gt;</span></span>
-<span><span class="co">#&gt; 8           &lt;NA&gt;      &lt;NA&gt; &lt;NA&gt;</span></span>
-<span><span class="co">#&gt; 9           &lt;NA&gt;      &lt;NA&gt; &lt;NA&gt;</span></span>
-<span><span class="co">#&gt; 10          &lt;NA&gt;        C2  pow</span></span>
-<span><span class="co">#&gt; 11          &lt;NA&gt;        C2 pow2</span></span>
-<span><span class="co">#&gt; 12          &lt;NA&gt;       eff  add</span></span>
-<span><span class="co">#&gt; 13          &lt;NA&gt;      &lt;NA&gt; &lt;NA&gt;</span></span>
-<span><span class="co">#&gt; 14          &lt;NA&gt;      &lt;NA&gt; &lt;NA&gt;</span></span>
-<span><span class="co">#&gt; 15          &lt;NA&gt;      &lt;NA&gt; &lt;NA&gt;</span></span>
-<span><span class="co">#&gt; 16          &lt;NA&gt;        id &lt;NA&gt;</span></span>
-<span><span class="co">#&gt; 17          &lt;NA&gt;        id &lt;NA&gt;</span></span>
+<span><span class="co">#&gt;    backTransform condition prior  err</span></span>
+<span><span class="co">#&gt; 1           &lt;NA&gt;      &lt;NA&gt;  &lt;NA&gt; &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 2           &lt;NA&gt;      &lt;NA&gt;  &lt;NA&gt; &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 3           &lt;NA&gt;      &lt;NA&gt;  &lt;NA&gt; &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 4           &lt;NA&gt;      &lt;NA&gt;  &lt;NA&gt; &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 5           &lt;NA&gt;      &lt;NA&gt;  &lt;NA&gt; &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 6           &lt;NA&gt;      &lt;NA&gt;  &lt;NA&gt; &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 7           &lt;NA&gt;      &lt;NA&gt;  &lt;NA&gt; &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 8           &lt;NA&gt;      &lt;NA&gt;  &lt;NA&gt; &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 9           &lt;NA&gt;      &lt;NA&gt;  &lt;NA&gt; &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 10          &lt;NA&gt;        C2  &lt;NA&gt;  pow</span></span>
+<span><span class="co">#&gt; 11          &lt;NA&gt;        C2  &lt;NA&gt; pow2</span></span>
+<span><span class="co">#&gt; 12          &lt;NA&gt;       eff  &lt;NA&gt;  add</span></span>
+<span><span class="co">#&gt; 13          &lt;NA&gt;      &lt;NA&gt;  &lt;NA&gt; &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 14          &lt;NA&gt;      &lt;NA&gt;  &lt;NA&gt; &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 15          &lt;NA&gt;      &lt;NA&gt;  &lt;NA&gt; &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 16          &lt;NA&gt;        id  &lt;NA&gt; &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 17          &lt;NA&gt;        id  &lt;NA&gt; &lt;NA&gt;</span></span>
 <span></span>
 <span><span class="va">m2</span><span class="op">$</span><span class="va">predDf</span></span>
 <span><span class="co">#&gt;   cond var dvid trLow trHi     transform errType      errTypeF addProp</span></span>
@@ -358,23 +361,24 @@ any typical R environment. This is done by
 <span><span class="fu"><a href="https://rdrr.io/r/base/ls.html" class="external-link">ls</a></span><span class="op">(</span><span class="va">m2</span>, all<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  [1] "covariates"                      "covLhsDf"                       </span></span>
 <span><span class="co">#&gt;  [3] "curHi"                           "curLow"                         </span></span>
-<span><span class="co">#&gt;  [5] "errParams0"                      "estNotAllowed"                  </span></span>
-<span><span class="co">#&gt;  [7] "eta"                             "etaLhsDf"                       </span></span>
-<span><span class="co">#&gt;  [9] "extraCmt"                        "extraDvid"                      </span></span>
-<span><span class="co">#&gt; [11] "hasErrors"                       "iniDf"                          </span></span>
-<span><span class="co">#&gt; [13] "level"                           "levelLhsDf"                     </span></span>
-<span><span class="co">#&gt; [15] "lstExpr"                         "meta"                           </span></span>
-<span><span class="co">#&gt; [17] "mixProbs"                        "model"                          </span></span>
-<span><span class="co">#&gt; [19] "modelName"                       "mu2RefCovariateReplaceDataFrame"</span></span>
-<span><span class="co">#&gt; [21] "muRefCovariateDataFrame"         "muRefCovariateEmpty"            </span></span>
-<span><span class="co">#&gt; [23] "muRefCurEval"                    "muRefDataFrame"                 </span></span>
-<span><span class="co">#&gt; [25] "muRefDropParameters"             "muRefExtra"                     </span></span>
-<span><span class="co">#&gt; [27] "muRefExtraEmpty"                 "mv0"                            </span></span>
-<span><span class="co">#&gt; [29] "mvL"                             "nonMuEtas"                      </span></span>
-<span><span class="co">#&gt; [31] "oneTheta"                        "predDf"                         </span></span>
-<span><span class="co">#&gt; [33] "redo"                            "singleTheta"                    </span></span>
-<span><span class="co">#&gt; [35] "sticky"                          "thetaLhsDf"                     </span></span>
-<span><span class="co">#&gt; [37] "uiUseData"                       "uiUseMv"</span></span></code></pre></div>
+<span><span class="co">#&gt;  [5] "endpointAlias"                   "errParams0"                     </span></span>
+<span><span class="co">#&gt;  [7] "estNotAllowed"                   "eta"                            </span></span>
+<span><span class="co">#&gt;  [9] "etaLhsDf"                        "extraCmt"                       </span></span>
+<span><span class="co">#&gt; [11] "extraDvid"                       "hasErrors"                      </span></span>
+<span><span class="co">#&gt; [13] "iniDf"                           "level"                          </span></span>
+<span><span class="co">#&gt; [15] "levelLhsDf"                      "lstExpr"                        </span></span>
+<span><span class="co">#&gt; [17] "meta"                            "mixProbs"                       </span></span>
+<span><span class="co">#&gt; [19] "model"                           "modelName"                      </span></span>
+<span><span class="co">#&gt; [21] "mu2RefCovariateReplaceDataFrame" "muRefCovariateDataFrame"        </span></span>
+<span><span class="co">#&gt; [23] "muRefCovariateEmpty"             "muRefCurEval"                   </span></span>
+<span><span class="co">#&gt; [25] "muRefDataFrame"                  "muRefDropParameters"            </span></span>
+<span><span class="co">#&gt; [27] "muRefExtra"                      "muRefExtraEmpty"                </span></span>
+<span><span class="co">#&gt; [29] "mv0"                             "mvL"                            </span></span>
+<span><span class="co">#&gt; [31] "nonMuEtas"                       "oneTheta"                       </span></span>
+<span><span class="co">#&gt; [33] "predDf"                          "redo"                           </span></span>
+<span><span class="co">#&gt; [35] "singleTheta"                     "sticky"                         </span></span>
+<span><span class="co">#&gt; [37] "thetaLhsDf"                      "uiUseData"                      </span></span>
+<span><span class="co">#&gt; [39] "uiUseMv"</span></span></code></pre></div>
 <p>You can see the two properties we queried are low level objects
 inside of the <code>roxde2</code> ui environment (or compressed
 environment). We will describe the other items in more detail later.</p>
@@ -1186,7 +1190,7 @@ assignments, then the <code><a href="../reference/ini.html">ini()</a></code> blo
 <span><span class="co">#&gt;         eff ~ add(eff.sd)</span></span>
 <span><span class="co">#&gt;     })</span></span>
 <span><span class="co">#&gt; }</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x562760a038c0&gt;</span></span></code></pre></div>
+<span><span class="co">#&gt; &lt;environment: 0x55d4f7f36420&gt;</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -1218,7 +1222,7 @@ object that appends the error-sampling code to the base ODE model, ready
 for stochastic simulation:</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">m2</span><span class="op">$</span><span class="va">simulationModel</span></span>
-<span><span class="co">#&gt; <span style="font-weight: bold;">rxode2 </span>5.1.3 model named <span style="color: #BBBB00; font-weight: bold;">rx_32e31bca7b41521d7635a67df536e03b</span> model (<span style="color: #00BB00;">✔</span> <span style="color: #00BB00; font-weight: bold;">ready</span>). </span></span>
+<span><span class="co">#&gt; <span style="font-weight: bold;">rxode2 </span>5.1.7 model named <span style="color: #BBBB00; font-weight: bold;">rx_8e695fc0280acb12d62c2025a5b18594</span> model (<span style="color: #00BB00;">✔</span> <span style="color: #00BB00; font-weight: bold;">ready</span>). </span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00;">x</span><span style="color: #0000BB; font-weight: bold;">$state</span>: depot, centr, peri, eff</span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00;">x</span><span style="color: #0000BB; font-weight: bold;">$stateExtra</span>: C2</span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00;">x</span><span style="color: #0000BB; font-weight: bold;">$params</span>: tka, tcl, covClWt, tv2, tq, tv3, tfdepot, tDurDepot, tRateDepot, c2.pow.sd, c2.pow, eff.sd, Kin, Kout, EC50, eta.ka, eta.cl, WT, CMT, rxerr.C2, rxerr.eff</span></span>
@@ -1235,7 +1239,7 @@ prepended as parameter assignments, so the model is self-contained and
 can be run without supplying a parameter vector:</p>
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">m2</span><span class="op">$</span><span class="va">simulationIniModel</span></span>
-<span><span class="co">#&gt; <span style="font-weight: bold;">rxode2 </span>5.1.3 model named <span style="color: #BBBB00; font-weight: bold;">rx_a9fb7233389f8eb93faef9033fca0a58</span> model (<span style="color: #00BB00;">✔</span> <span style="color: #00BB00; font-weight: bold;">ready</span>). </span></span>
+<span><span class="co">#&gt; <span style="font-weight: bold;">rxode2 </span>5.1.7 model named <span style="color: #BBBB00; font-weight: bold;">rx_9c904604af00e45c6733a0405dee2b35</span> model (<span style="color: #00BB00;">✔</span> <span style="color: #00BB00; font-weight: bold;">ready</span>). </span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00;">x</span><span style="color: #0000BB; font-weight: bold;">$state</span>: depot, centr, peri, eff</span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00;">x</span><span style="color: #0000BB; font-weight: bold;">$stateExtra</span>: C2</span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00;">x</span><span style="color: #0000BB; font-weight: bold;">$params</span>: tka, tcl, covClWt, tv2, tq, tv3, tfdepot, tDurDepot, tRateDepot, c2.pow.sd, c2.pow, eff.sd, Kin, Kout, EC50, eta.ka, eta.cl, WT, rxerr.C2, rxerr.eff, CMT</span></span>
@@ -1251,11 +1255,11 @@ rxode2 version) and are suitable for caching or comparing models:</p>
 <div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># MD5 hash</span></span>
 <span><span class="va">m2</span><span class="op">$</span><span class="va">md5</span></span>
-<span><span class="co">#&gt; [1] "45b635a6714e9ccbf204cbbf7493ea58"</span></span>
+<span><span class="co">#&gt; [1] "621f5ec1390d701822f865690a7eac83"</span></span>
 <span></span>
 <span><span class="co"># SHA-1 hash</span></span>
 <span><span class="va">m2</span><span class="op">$</span><span class="va">sha1</span></span>
-<span><span class="co">#&gt; [1] "4a53e4ce56138c790f91f0138abb8a97cb903669"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "31998760f57c1be1a72d03ec1946963da50717d7"</span></span></code></pre></div>
 <p>These hashes change whenever the model equations, initial estimates,
 or error specification change, but are insensitive to label or comment
 differences.</p>
@@ -1335,7 +1339,7 @@ properties:</p>
 <span><span class="co">#&gt;  $ funPartsDigest:   </span></span>
 <span><span class="co">#&gt;  $ funPrint  :  Normalized, quoted model function (for printing)</span></span>
 <span><span class="co">#&gt;  $ funTxt    :  Get function text for the model({}) block</span></span>
-<span><span class="co">#&gt;  $ ini       :  Model initilizations/bounds object</span></span>
+<span><span class="co">#&gt;  $ ini       :  Model initializations/bounds object</span></span>
 <span><span class="co">#&gt;  $ iniFun    :  normalized, quoted `ini()` block</span></span>
 <span><span class="co">#&gt;  $ interpLines:  interpolation declaration line(s) for model</span></span>
 <span><span class="co">#&gt;  $ levelLhs  :  level-&gt;lhs translation</span></span>
@@ -1349,10 +1353,12 @@ properties:</p>
 <span><span class="co">#&gt;  $ model     :  normalized, quoted `model()` block</span></span>
 <span><span class="co">#&gt;  $ modelDesc :  Model description (ie linear compartment, pred, ode etc)</span></span>
 <span><span class="co">#&gt;  $ modelFun  :  normalized, quoted `model()` block</span></span>
+<span><span class="co">#&gt;  $ modelName :  Name of the model</span></span>
 <span><span class="co">#&gt;  $ multipleEndpoint:  table of multiple endpoint translations</span></span>
 <span><span class="co">#&gt;  $ muRefTable:  table of mu-referenced items in a model</span></span>
 <span><span class="co">#&gt;  $ mvFromExpression:  Calculate model variables from stored (possibly changed) expression</span></span>
 <span><span class="co">#&gt;  $ omega     :  Initial Random Effects variability matrix, omega</span></span>
+<span><span class="co">#&gt;  $ omegaSameMap:  Map of omega blocks that repeat an earlier block</span></span>
 <span><span class="co">#&gt;  $ paramsLine:  params() line for model</span></span>
 <span><span class="co">#&gt;  $ props     :  rxode2 model properties</span></span>
 <span><span class="co">#&gt;  $ sha1      :  SHA1 hash of the UI model</span></span>
@@ -1420,7 +1426,7 @@ printed as assignment expressions when the model is displayed.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

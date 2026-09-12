@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rxode2</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">5.1.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">5.1.7</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -20,7 +20,7 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-begin"><li><a class="dropdown-item" href="../articles/rxode2-intro.html">Introduction to rxode2</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-syntax.html">rxode2 mini-language syntax</a></li>
     <li><a class="dropdown-item" href="../articles/ode-solvers.html">ODE solvers</a></li>
-    <li><a class="dropdown-item" href="../articles/rxode2-ind-lin.html">Matrix Exponentials / Inductive Linearization</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-ind-lin.html">Matrix Exponential Solving</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-tutorials.html">Interactive tutorials</a></li>
   </ul></li>
 <li class="nav-item dropdown">
@@ -49,7 +49,9 @@
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Variability and uncertainty</h6></li>
     <li><a class="dropdown-item" href="../articles/rxode2-parameter-uncertainty.html">Parameter uncertainty</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-confint.html">Summarizing simulations with confint()</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-eta-eps-resampling.html">ETA/EPS resampling</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-phase-residual-error.html">Separating phase 1 and phase 3 residual error</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-examples" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true"><span class="fa fas fa-hospital"></span> Examples</button>
@@ -69,6 +71,7 @@
     <li><a class="dropdown-item" href="../articles/rxode2-wt.html">Weight-based dosing</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-transit-compartments.html">Transit compartment models</a></li>
     <li><a class="dropdown-item" href="../articles/rxode2-stiff.html">Stiff systems and Jacobian specification</a></li>
+    <li><a class="dropdown-item" href="../articles/rxode2-delay-differential-equations.html">Delay differential equations</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Output and performance</h6></li>
     <li><a class="dropdown-item" href="../articles/rxode2-data-frame.html">Adaptive data frames</a></li>
@@ -199,6 +202,17 @@ size is greater or equal to 10</p></li>
 <li><p><code>"auto"</code> chooses <code>"lkj"</code> when the dimension of the
 matrix is less than 10 and <code>"separation"</code> when greater
 than equal to 10.</p></li>
+<li><p><code>"tnpri"</code> does not use a separation strategy at all: the omega
+entries themselves are carried in the <code>thetaMat</code> and are drawn from
+it jointly with the thetas, which is what a covariance step from
+NONMEM or 'nlmixr2' gives and what NONMEM calls <code>TNPRI</code>.  This keeps
+the off diagonal entries and the covariances between the thetas and
+the omega entries, which the strategies above redraw or discard.
+<code>omega</code> has to be a matrix, since the draws are added to it, and the
+<code>thetaMat</code> columns are matched to entries by name – <code>om.eta.cl</code> or
+<code>eta.cl</code> for a diagonal, and <code>cov.eta.cl.eta.v</code> or <code>omega2.1</code> for an
+off diagonal.  A drawn matrix that is not positive definite is
+redrawn, see <code>priorPdRetry</code>.</p></li>
 </ul></dd>
 
 
@@ -307,6 +321,8 @@ size is greater or equal to 10</p></li>
 <li><p><code>"auto"</code> chooses <code>"lkj"</code> when the dimension of the
 matrix is less than 10 and <code>"separation"</code> when greater
 than equal to 10.</p></li>
+<li><p><code>"tnpri"</code> draws the sigma entries jointly from the <code>thetaMat</code>, the
+same way <code>omegaSeparation="tnpri"</code> does for the omega.</p></li>
 </ul></dd>
 
 
@@ -385,7 +401,7 @@ When <code>NA</code> (default) this is determined by the solver.</p></dd>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>
