@@ -2813,3 +2813,14 @@ rxModelVarsS3.default <- function(obj) {
   .mod <- substring(.base, 0, nchar(.base) - .extra)
   return(c(.mod, paste0(.mod, "_", .Platform$r_arch, "_")))
 }
+
+#' Does the generated `dydt` honor a compacted `_neq[0]`?
+#'
+#' `TRUE` when the models this rxode2 compiles write only the first `_neq[0]`
+#' derivatives and read no state beyond them, so a downstream package may solve
+#' the leading block of a model with `ind->neqOverride` (nlmixr2est's pooled
+#' FOCEi inner solves).
+#' @return logical
+#' @export
+#' @keywords internal
+rxDydtCompact <- function() TRUE

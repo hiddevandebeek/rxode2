@@ -150,11 +150,16 @@ static inline int handleDdtAssign(nodeInfo ni, char *name, int i, D_ParseNode *p
     tb.lastDdt = tb.id;
     /* printf("de[%d]->%s[%d]\n",tb.id,v,tb.ix); */
     sb.o =0; sbDt.o =0;
+    // `if (__DDTk__ < _rxNeqEff_)`: a solve compacted by ind->neqOverride skips the
+    // derivatives it does not integrate, so the leading block of a sensitivity
+    // model costs what that block costs (the trailing sensitivity expressions are
+    // the bulk of the RHS).  _rxNeqEff_ is set with the state loads in every
+    // function these lines print in.
     if (tb.idu[tb.id] == 0){
-      sAppend(&sb, "__DDtStateVar__[__DDT%d__] = ((double)(_ON[__DDT%d__]))*(_IR[__DDT%d__] ", tb.id, tb.id, tb.id);
+      sAppend(&sb, "if (__DDT%d__ < _rxNeqEff_) __DDtStateVar__[__DDT%d__] = ((double)(_ON[__DDT%d__]))*(_IR[__DDT%d__] ", tb.id, tb.id, tb.id, tb.id);
       sAppend(&sbDt, "__DDtStateVar_%d__ = ((double)(_ON[__DDT%d__]))*(_IR[__DDT%d__] ", tb.id, tb.id, tb.id);
     } else {
-      sAppend(&sb, "__DDtStateVar__[__DDT%d__] = ((double)(_ON[__DDT%d__]))*(", tb.id, tb.id);
+      sAppend(&sb, "if (__DDT%d__ < _rxNeqEff_) __DDtStateVar__[__DDT%d__] = ((double)(_ON[__DDT%d__]))*(", tb.id, tb.id, tb.id);
       sAppend(&sbDt, "__DDtStateVar_%d__ = ((double)(_ON[__DDT%d__]))*(", tb.id, tb.id);
     }
     tb.idu[tb.id]=1;

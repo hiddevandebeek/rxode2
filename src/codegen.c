@@ -543,6 +543,10 @@ void codegen(char *model, int show_ode, const char *prefix, const char *libname,
       if (show_ode != ode_past){
         // past() history is a function of t and parameters only (no states); its
         // __zzStateVar__ is NULL, so state-var population is skipped for ode_past.
+        // A solve compacted by ind->neqOverride hands over a state row that is
+        // only rxEffNeq() wide; the states beyond it are read as 0 rather than
+        // as whatever follows the row in memory.
+        sAppendN(&sbOut, "  int _rxNeqEff_ = rxEffNeq(_ind, _solveData->op); (void)_rxNeqEff_;\n", 69);
         for (i=0; i<tb.de.n; i++) {                   /* name state vars */
           buf = tb.ss.line[tb.di[i]];
           if (tb.idu[i] == 0) {
@@ -550,7 +554,7 @@ void codegen(char *model, int show_ode, const char *prefix, const char *libname,
             // Rate/Dur/F/Lag functions: populate state vars from __zzStateVar__
             sAppendN(&sbOut, "  ", 2);
             doDot(&sbOut, buf);
-            sAppend(&sbOut, " = __zzStateVar__[__DDT%d__]*((double)(_ON[__DDT%d__]));\n", i, i);
+            sAppend(&sbOut, " = (__DDT%d__ < _rxNeqEff_ ? __zzStateVar__[__DDT%d__] : 0.0)*((double)(_ON[__DDT%d__]));\n", i, i, i);
           }
         }
         sAppendN(&sbOut, "\n", 1);
@@ -809,7 +813,7 @@ void codegen(char *model, int show_ode, const char *prefix, const char *libname,
       if (foundF0){
         for (i = 0; i < tb.de.n; i++) {
           buf=tb.ss.line[tb.di[i]];
-          sAppend(&sbOut, "  __zzStateVar__[__DDT%d__]=((double)(_ON[__DDT%d__]))*(",i,i);
+          sAppend(&sbOut, "  if (__DDT%d__ < _rxNeqEff_) __zzStateVar__[__DDT%d__]=((double)(_ON[__DDT%d__]))*(",i,i,i);
           doDot(&sbOut, buf);
           sAppendN(&sbOut,  ");\n", 3);
         }

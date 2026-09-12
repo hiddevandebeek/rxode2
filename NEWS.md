@@ -2,6 +2,16 @@
 
 ## New features
 
+- A model can be solved compacted to its leading block of states
+  (`ind->neqOverride` below the model's own state count): the generated `dydt`
+  assembles its derivatives in a full-width local, writes only the first
+  `_neq[0]` to the integrator and skips the derivative lines beyond it, and
+  every generated function reads a state beyond the compacted width as 0
+  instead of the memory that follows the state row.  `rxDydtCompact()` reports
+  the capability.  This is what lets `nlmixr2est` integrate only the FOCEi
+  block of a combined inner+outer sensitivity model during its inner
+  iterations.
+
 - The event table and the runtime dose-pushing statements (`evid_()`,
   `bolus()`, `infuse()`, `infuseDur()`, `replace()`, `multiply()`,
   `phantom()`, `reset()`) now share one implementation of the NONMEM event
